@@ -1,0 +1,900 @@
+<title>Anatomy of nanograd-gpt</title>
+<style>
+  :root {
+    --bg: #faf7f0;
+    --surface: #f1ece0;
+    --surface-2: #e7dfcb;
+    --text: #201d16;
+    --text-muted: #6e6858;
+    --accent: #b5652d;
+    --accent-soft: #e7c9a8;
+    --accent2: #2f6b68;
+    --accent2-soft: #cfe3df;
+    --rule: rgba(32, 29, 22, 0.14);
+    --code-bg: #efe8d8;
+    --shadow: rgba(32, 24, 10, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15161a;
+      --surface: #1d1f24;
+      --surface-2: #262930;
+      --text: #ece7da;
+      --text-muted: #9b9686;
+      --accent: #dd8a4b;
+      --accent-soft: #4a3626;
+      --accent2: #6bb2ad;
+      --accent2-soft: #223835;
+      --rule: rgba(236, 231, 218, 0.14);
+      --code-bg: #20242b;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15161a;
+    --surface: #1d1f24;
+    --surface-2: #262930;
+    --text: #ece7da;
+    --text-muted: #9b9686;
+    --accent: #dd8a4b;
+    --accent-soft: #4a3626;
+    --accent2: #6bb2ad;
+    --accent2-soft: #223835;
+    --rule: rgba(236, 231, 218, 0.14);
+    --code-bg: #20242b;
+    --shadow: rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono, .tag, table.shapes, .formula, .var-name {
+    font-family: ui-monospace, "Cascadia Code", "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  h1, h2, h3 {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-weight: 600;
+    text-wrap: balance;
+    color: var(--text);
+  }
+  h1 { font-size: clamp(2rem, 5vw, 2.9rem); line-height: 1.12; margin: 0 0 0.3em; }
+  h2 { font-size: 1.55rem; margin: 0 0 0.2em; }
+  h3 { font-size: 1.12rem; margin: 0 0 0.4em; color: var(--accent); }
+  p { margin: 0 0 1em; max-width: 68ch; }
+  .wide p { max-width: 74ch; }
+  a { color: var(--accent2); }
+
+  header.hero {
+    padding: 4.5rem 1.5rem 3rem;
+    border-bottom: 1px solid var(--rule);
+    background:
+      radial-gradient(ellipse 60% 50% at 12% -10%, var(--accent-soft) 0%, transparent 60%),
+      var(--bg);
+  }
+  .hero-inner { max-width: 760px; margin: 0 auto; }
+  .eyebrow {
+    display: inline-block;
+    font-family: ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0.28em 0.7em;
+    border-radius: 3px;
+    margin-bottom: 1.1em;
+  }
+  .hero-sub { color: var(--text-muted); font-size: 1.08rem; max-width: 62ch; }
+  .hero-meta {
+    margin-top: 1.6em;
+    display: flex;
+    gap: 1.6em;
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+  .hero-meta b { color: var(--text); font-weight: 600; }
+
+  nav.toc {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--rule);
+    overflow-x: auto;
+  }
+  nav.toc .toc-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0.3rem;
+    padding: 0.65rem 1.5rem;
+    white-space: nowrap;
+  }
+  nav.toc a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.84rem;
+    padding: 0.35em 0.75em;
+    border-radius: 5px;
+  }
+  nav.toc a:hover { color: var(--text); background: var(--surface); }
+
+  main { max-width: 760px; margin: 0 auto; padding: 0 1.5rem; }
+  main.wide-context { max-width: 980px; }
+  section {
+    padding: 3.2rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  section:last-of-type { border-bottom: none; }
+  .section-num {
+    font-family: ui-monospace, monospace;
+    color: var(--accent);
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.4rem 1.6rem;
+    margin: 1.4rem 0;
+  }
+  .panel.wide { max-width: none; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.55em 0.85em; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { color: var(--text-muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td .var-name, th .var-name { color: var(--accent); }
+  .table-scroll { overflow-x: auto; margin: 1.2rem 0; }
+  .table-scroll table { min-width: 560px; }
+
+  .file-path { color: var(--accent2); font-weight: 600; }
+
+  .shape {
+    display: inline-block;
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 0.05em 0.5em;
+    font-size: 0.88em;
+    color: var(--text);
+  }
+  .shape.hl { border-color: var(--accent); color: var(--accent); }
+  .shape.grad { border-color: var(--accent2); color: var(--accent2); }
+
+  figure { margin: 1.6rem 0; }
+  figure svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  figcaption { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.7em; max-width: 60ch; margin-left: auto; margin-right: auto; }
+
+  .step-row {
+    display: grid;
+    grid-template-columns: 108px 1fr;
+    gap: 0.9rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px dashed var(--rule);
+    align-items: start;
+  }
+  .step-row:last-child { border-bottom: none; }
+  .step-tag {
+    font-family: ui-monospace, monospace;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    padding-top: 0.15em;
+  }
+  .step-body b.op { color: var(--accent); }
+  .step-body .shapes-line { margin-top: 0.35em; }
+
+  .formula-block {
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin: 0.9rem 0;
+    overflow-x: auto;
+  }
+  .formula-block.back { border-left-color: var(--accent2); }
+  .formula-block .label {
+    display: block;
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    margin-bottom: 0.45em;
+  }
+  .formula-block .expr {
+    font-family: ui-monospace, monospace;
+    font-size: 0.98rem;
+    white-space: pre;
+  }
+
+  .func-card { margin: 2.2rem 0; }
+  .func-card h3 { display: flex; align-items: baseline; gap: 0.6em; }
+  .func-card h3 .file-tag {
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    background: var(--surface-2);
+    padding: 0.15em 0.5em;
+    border-radius: 3px;
+  }
+  .stability-note {
+    margin-top: 0.7em;
+    padding: 0.7em 1em;
+    background: var(--accent2-soft);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    border-left: 3px solid var(--accent2);
+  }
+  .stability-note b { color: var(--accent2); }
+
+  .badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.8rem 0 1.2rem; }
+  .badge {
+    font-family: ui-monospace, monospace;
+    font-size: 0.78rem;
+    padding: 0.3em 0.7em;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    color: var(--text-muted);
+  }
+
+  footer {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">Codebase walkthrough — nanograd-gpt</span>
+    <h1>Anatomy of a GPT-2 with hand-derived gradients</h1>
+    <p class="hero-sub">
+      Every variable, every shape, every formula in the <code>rumik assignment</code> codebase —
+      traced end to end through one real sentence, <em>"The cat sat on the mat."</em>,
+      as it moves through embeddings, six transformer blocks, and back out through
+      a hand-written backward pass. No autograd anywhere in this document's subject matter.
+    </p>
+    <div class="hero-meta">
+      <span><b>Backend:</b> numpy ⇄ cupy, one <code>xp</code> switch</span>
+      <span><b>Config traced:</b> n_layer=6, n_head=6, n_embd=384, block_size=256</span>
+      <span><b>Params:</b> 30,062,592</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="toc-inner">
+    <a href="#map">01 Codebase map</a>
+    <a href="#glossary">02 Variable glossary</a>
+    <a href="#architecture">03 Architecture</a>
+    <a href="#attention">04 Attention internals</a>
+    <a href="#dryrun">05 Dry run</a>
+    <a href="#math">06 Math reference</a>
+    <a href="#optim">07 Optimizer</a>
+  </div>
+</nav>
+
+<main>
+
+<section id="map">
+  <span class="section-num">01</span>
+  <h2>Codebase map</h2>
+  <p>Five files. No file imports torch or jax. <code>backend.py</code> is the only place
+  that ever mentions cupy by name — everywhere else just uses whatever <code>self.xp</code> was
+  handed at construction time.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th>File</th><th>What lives there</th></tr>
+    <tr>
+      <td class="file-path">backend.py</td>
+      <td><code>get_xp(device)</code> returns the <code>numpy</code> or <code>cupy</code> module itself.
+      <code>scatter_add()</code> is the one function where the two backends diverge
+      (<code>np.add.at</code> vs <code>cupyx.scatter_add</code>) because gradient accumulation at
+      repeated embedding indices isn't expressible identically in both APIs.</td>
+    </tr>
+    <tr>
+      <td class="file-path">param.py</td>
+      <td><code>Param</code>: a trainable array (<code>.data</code>) plus its gradient buffer
+      (<code>.grad</code>), which backward passes always accumulate into with <code>+=</code>,
+      never overwrite — this is what makes the tied embedding table's two gradient
+      sources merge instead of clobber.</td>
+    </tr>
+    <tr>
+      <td class="file-path">layers.py</td>
+      <td>Every layer as a class with hand-coded <code>forward()</code> / <code>backward()</code>:
+      <code>Linear</code>, <code>LayerNorm</code>, <code>GELU</code>, <code>Embedding</code>,
+      <code>CausalSelfAttention</code>, <code>MLP</code>, <code>Block</code>, plus the free functions
+      <code>softmax</code>, <code>softmax_backward</code>, <code>softmax_cross_entropy</code>.
+      No autograd tape — each layer caches whatever its own backward needs on <code>self</code>.</td>
+    </tr>
+    <tr>
+      <td class="file-path">model.py</td>
+      <td><code>GPTConfig</code> (the five architecture numbers) and <code>GPT</code>, which wires
+      the embeddings + N blocks + final LayerNorm + tied output projection into the fixed
+      pipeline traced in §5, and owns the one non-layer-local piece of backward math: the
+      weight-tying gradient merge.</td>
+    </tr>
+    <tr>
+      <td class="file-path">optim.py</td>
+      <td><code>AdamW</code> and <code>cosine_lr()</code> — pure parameter-update arithmetic,
+      no forward/backward involved at all.</td>
+    </tr>
+  </table>
+  </div>
+</section>
+
+<section id="glossary">
+  <span class="section-num">02</span>
+  <h2>Variable &amp; shape glossary</h2>
+  <p>These letters appear, unchanged, in every docstring, comment, and shape annotation
+  across the codebase. Values shown are for the config actually training right now.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th>Symbol</th><th>Meaning</th><th>Value in this run</th></tr>
+    <tr><td class="var-name">B</td><td>batch size — how many sequences processed together</td><td>32 (training) · 1 in the dry run below</td></tr>
+    <tr><td class="var-name">T</td><td>sequence length of the current batch (≤ block_size)</td><td>256 (training) · 7 in the dry run below</td></tr>
+    <tr><td class="var-name">C</td><td><code>n_embd</code>, the model's residual-stream width</td><td>384</td></tr>
+    <tr><td class="var-name">V</td><td><code>vocab_size</code>, size of the token vocabulary</td><td>50,304 (GPT-2's 50,257 padded up for tensor-friendly shapes)</td></tr>
+    <tr><td class="var-name">n_head</td><td>number of attention heads</td><td>6</td></tr>
+    <tr><td class="var-name">hd</td><td>per-head dimension, <code>C / n_head</code></td><td>64</td></tr>
+    <tr><td class="var-name">block_size</td><td>maximum context length the model was built for</td><td>256</td></tr>
+    <tr><td class="var-name">N</td><td><code>B·T</code>, tokens flattened for the loss / Linear backward</td><td>7 in the dry run</td></tr>
+    <tr><td class="var-name">xp</td><td>whichever array module (<code>numpy</code> or <code>cupy</code>) this layer instance was built with</td><td><code>cupy</code> for the live training run</td></tr>
+    <tr><td class="var-name">dy / dout</td><td>gradient of the scalar loss w.r.t. this layer's output — every backward's input</td><td>—</td></tr>
+    <tr><td class="var-name">dx</td><td>gradient w.r.t. this layer's input — every backward's return value</td><td>—</td></tr>
+    <tr><td class="var-name">xhat</td><td>LayerNorm's whitened activation, <code>(x−μ)/σ</code>, cached for backward</td><td>—</td></tr>
+    <tr><td class="var-name">p</td><td>attention weights after softmax, shape (B,n_head,T,T)</td><td>—</td></tr>
+  </table>
+  </div>
+</section>
+
+<section id="architecture">
+  <span class="section-num">03</span>
+  <h2>The full forward pipeline</h2>
+  <p>Pre-norm GPT-2, exactly nanoGPT's block order. Every arrow below is annotated with the
+  tensor shape crossing it, using the training config (B=32, T=256).</p>
+
+  <figure>
+    <svg viewBox="0 0 620 1060" role="img" aria-label="GPT-2 forward pipeline from token ids through six transformer blocks to the loss, with tensor shapes labeled on each arrow">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <style>
+        .box { fill: none; stroke: currentColor; stroke-width: 1.3; }
+        .box-accent { stroke: var(--accent); }
+        .lbl { font-size: 13px; fill: currentColor; }
+        .lbl-b { font-size: 13px; fill: currentColor; font-weight: 600; }
+        .shp { font-family: ui-monospace, monospace; font-size: 11px; fill: var(--accent2); }
+        .flow { stroke: currentColor; stroke-width: 1.3; marker-end: url(#arrow); }
+        .grp-label { font-size: 11px; fill: var(--text-muted, currentColor); letter-spacing: 0.04em; }
+      </style>
+
+      <!-- input -->
+      <rect class="box" x="210" y="10" width="200" height="40" rx="6"/>
+      <text class="lbl-b" x="310" y="35" text-anchor="middle">token ids idx</text>
+      <line class="flow" x1="310" y1="50" x2="310" y2="78"/>
+      <text class="shp" x="330" y="70" text-anchor="start">(B,T) int64</text>
+
+      <!-- embeddings -->
+      <rect class="box" x="120" y="80" width="150" height="46" rx="6"/>
+      <text class="lbl" x="195" y="100" text-anchor="middle">wte[idx]</text>
+      <text class="lbl" x="195" y="116" text-anchor="middle">token embed</text>
+      <rect class="box" x="350" y="80" width="150" height="46" rx="6"/>
+      <text class="lbl" x="425" y="100" text-anchor="middle">wpe[pos]</text>
+      <text class="lbl" x="425" y="116" text-anchor="middle">position embed</text>
+      <line class="flow" x1="270" y1="103" x2="330" y2="103"/>
+      <text class="shp" x="300" y="97" text-anchor="middle">+</text>
+
+      <line class="flow" x1="195" y1="126" x2="300" y2="160"/>
+      <line class="flow" x1="425" y1="126" x2="320" y2="160"/>
+
+      <rect class="box box-accent" x="210" y="162" width="200" height="40" rx="6"/>
+      <text class="lbl-b" x="310" y="187" text-anchor="middle">x = tok_emb + pos_emb</text>
+      <text class="shp" x="310" y="215" text-anchor="middle">(B,T,C) = (32,256,384)</text>
+
+      <!-- block loop container -->
+      <rect x="70" y="232" width="480" height="560" rx="10" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-dasharray="4 3"/>
+      <text class="grp-label" x="86" y="252">× 6 blocks (n_layer)</text>
+
+      <line class="flow" x1="310" y1="202" x2="310" y2="272"/>
+
+      <rect class="box" x="190" y="274" width="240" height="34" rx="6"/>
+      <text class="lbl" x="310" y="296" text-anchor="middle">LayerNorm(x)</text>
+      <line class="flow" x1="310" y1="308" x2="310" y2="332"/>
+
+      <rect class="box box-accent" x="150" y="334" width="320" height="34" rx="6"/>
+      <text class="lbl" x="310" y="356" text-anchor="middle">CausalSelfAttention  →  see §4</text>
+      <line class="flow" x1="310" y1="368" x2="310" y2="392"/>
+      <text class="shp" x="330" y="384">(B,T,C)</text>
+
+      <circle cx="310" cy="410" r="14" class="box"/>
+      <text class="lbl-b" x="310" y="415" text-anchor="middle">+</text>
+      <line class="flow" x1="230" y1="235" x2="296" y2="400" stroke-dasharray="2 3"/>
+      <text class="grp-label" x="188" y="270">residual</text>
+
+      <line class="flow" x1="310" y1="424" x2="310" y2="448"/>
+
+      <rect class="box" x="190" y="450" width="240" height="34" rx="6"/>
+      <text class="lbl" x="310" y="472" text-anchor="middle">LayerNorm(x)</text>
+      <line class="flow" x1="310" y1="484" x2="310" y2="508"/>
+
+      <rect class="box" x="170" y="510" width="280" height="76" rx="6"/>
+      <text class="lbl" x="310" y="532" text-anchor="middle">Linear(C, 4C) → GELU</text>
+      <text class="lbl" x="310" y="552" text-anchor="middle">Linear(4C, C)</text>
+      <text class="shp" x="310" y="572" text-anchor="middle">(B,T,4C)=(32,256,1536) → (B,T,C)</text>
+      <line class="flow" x1="310" y1="586" x2="310" y2="610"/>
+
+      <circle cx="310" cy="628" r="14" class="box"/>
+      <text class="lbl-b" x="310" y="633" text-anchor="middle">+</text>
+      <line class="flow" x1="470" y1="420" x2="322" y2="618" stroke-dasharray="2 3"/>
+      <text class="grp-label" x="452" y="415">residual</text>
+
+      <text class="shp" x="310" y="668" text-anchor="middle">out: (B,T,C) — feeds next block, or final LN after block 6</text>
+
+      <line class="flow" x1="310" y1="792" x2="310" y2="822"/>
+
+      <!-- final LN + head -->
+      <rect class="box" x="190" y="824" width="240" height="34" rx="6"/>
+      <text class="lbl" x="310" y="846" text-anchor="middle">LayerNorm  (ln_f)</text>
+      <line class="flow" x1="310" y1="858" x2="310" y2="882"/>
+
+      <rect class="box box-accent" x="140" y="884" width="340" height="46" rx="6"/>
+      <text class="lbl-b" x="310" y="904" text-anchor="middle">logits = h @ wte.weight.T</text>
+      <text class="lbl" x="310" y="920" text-anchor="middle" font-size="11">tied to the token-embedding table — no separate weight</text>
+      <line class="flow" x1="310" y1="930" x2="310" y2="954"/>
+      <text class="shp" x="330" y="946">(B,T,V)=(32,256,50304)</text>
+
+      <rect class="box" x="170" y="956" width="280" height="40" rx="6"/>
+      <text class="lbl" x="310" y="980" text-anchor="middle">softmax cross-entropy vs targets</text>
+      <line class="flow" x1="310" y1="996" x2="310" y2="1020"/>
+
+      <rect class="box box-accent" x="250" y="1022" width="120" height="34" rx="6"/>
+      <text class="lbl-b" x="310" y="1044" text-anchor="middle">loss (scalar)</text>
+    </svg>
+    <figcaption>Forward pipeline, model.py — token ids in, scalar loss out. Dashed loop
+    box is one <code>Block</code>, repeated <code>n_layer</code> times; dashed diagonal arrows
+    are the two residual adds (§6 covers why their backward is just "copy the gradient
+    into both branches").</figcaption>
+  </figure>
+</section>
+
+<section id="attention">
+  <span class="section-num">04</span>
+  <h2>Inside CausalSelfAttention</h2>
+  <p>The one layer with genuinely nontrivial backward math: a softmax Jacobian sitting
+  between two batched, multi-head matmuls. Shapes shown for the training batch
+  (B=32, T=256, n_head=6, hd=64).</p>
+
+  <figure>
+    <svg viewBox="0 0 940 300" role="img" aria-label="Causal self-attention internals: input splits into query key value, heads are split, scaled dot product attention with causal mask and softmax produces weighted values, heads merge, and output projects back">
+      <defs>
+        <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <style>
+        .b { fill: none; stroke: currentColor; stroke-width: 1.3; }
+        .ba { stroke: var(--accent); }
+        .l { font-size: 12px; fill: currentColor; }
+        .s { font-family: ui-monospace, monospace; font-size: 10.5px; fill: var(--accent2); }
+        .f { stroke: currentColor; stroke-width: 1.2; marker-end: url(#arrow2); }
+      </style>
+
+      <rect class="b" x="10" y="120" width="80" height="40" rx="6"/>
+      <text class="l" x="50" y="144" text-anchor="middle">x</text>
+      <text class="s" x="50" y="105" text-anchor="middle">(B,T,C)</text>
+
+      <line class="f" x1="90" y1="140" x2="130" y2="140"/>
+      <rect class="b" x="132" y="118" width="110" height="44" rx="6"/>
+      <text class="l" x="187" y="134" text-anchor="middle">c_attn</text>
+      <text class="l" x="187" y="150" text-anchor="middle" font-size="10">Linear(C,3C)</text>
+
+      <line class="f" x1="242" y1="140" x2="280" y2="140"/>
+      <text class="s" x="260" y="128" text-anchor="middle">(B,T,3C)</text>
+
+      <rect class="b" x="282" y="60" width="70" height="34" rx="5"/>
+      <text class="l" x="317" y="82" text-anchor="middle">q</text>
+      <rect class="b" x="282" y="123" width="70" height="34" rx="5"/>
+      <text class="l" x="317" y="145" text-anchor="middle">k</text>
+      <rect class="b" x="282" y="186" width="70" height="34" rx="5"/>
+      <text class="l" x="317" y="208" text-anchor="middle">v</text>
+      <text class="s" x="317" y="235" text-anchor="middle">split(3), each (B,T,C)</text>
+
+      <line class="f" x1="352" y1="77" x2="392" y2="77"/>
+      <line class="f" x1="352" y1="140" x2="392" y2="140"/>
+      <line class="f" x1="352" y1="203" x2="392" y2="203"/>
+      <text class="s" x="365" y="70" text-anchor="middle" font-size="9.5">reshape+</text>
+      <text class="s" x="365" y="253" text-anchor="middle">→ (B,nh,T,hd)</text>
+      <text class="s" x="365" y="264" text-anchor="middle">=(32,6,256,64)</text>
+
+      <rect class="b ba" x="394" y="45" width="130" height="205" rx="8"/>
+      <text class="l" x="459" y="66" text-anchor="middle" font-size="11">scaled dot-product</text>
+
+      <rect class="b" x="410" y="80" width="98" height="34" rx="5"/>
+      <text class="l" x="459" y="101" text-anchor="middle" font-size="11">qkᵀ / √hd</text>
+      <line class="f" x1="459" y1="114" x2="459" y2="138"/>
+      <rect class="b" x="410" y="140" width="98" height="30" rx="5"/>
+      <text class="l" x="459" y="160" text-anchor="middle" font-size="10.5">+ causal mask</text>
+      <line class="f" x1="459" y1="170" x2="459" y2="192"/>
+      <rect class="b" x="410" y="194" width="98" height="30" rx="5"/>
+      <text class="l" x="459" y="214" text-anchor="middle" font-size="11">softmax → p</text>
+      <text class="s" x="459" y="35" text-anchor="middle">att,p: (B,nh,T,T)</text>
+
+      <line class="f" x1="524" y1="150" x2="562" y2="150"/>
+      <rect class="b" x="564" y="123" width="70" height="34" rx="5"/>
+      <text class="l" x="599" y="145" text-anchor="middle" font-size="11">p·v</text>
+      <text class="s" x="599" y="175" text-anchor="middle">(B,nh,T,hd)</text>
+
+      <line class="f" x1="634" y1="140" x2="672" y2="140"/>
+      <rect class="b" x="674" y="123" width="90" height="34" rx="5"/>
+      <text class="l" x="719" y="145" text-anchor="middle" font-size="11">merge heads</text>
+      <text class="s" x="719" y="175" text-anchor="middle">(B,T,C)</text>
+
+      <line class="f" x1="764" y1="140" x2="800" y2="140"/>
+      <rect class="b ba" x="802" y="118" width="100" height="44" rx="6"/>
+      <text class="l" x="852" y="134" text-anchor="middle" font-size="11">c_proj</text>
+      <text class="l" x="852" y="150" text-anchor="middle" font-size="10">Linear(C,C)</text>
+
+      <line class="f" x1="902" y1="140" x2="930" y2="140"/>
+      <text class="s" x="915" y="128" text-anchor="middle" font-size="9.5">→ +res</text>
+    </svg>
+    <figcaption>layers.py, <code>CausalSelfAttention.forward</code>. The mask is an
+    additive (T,T) matrix of <code>−inf</code> strictly above the diagonal, computed once
+    per layer at construction, sliced to the live <code>T</code> each call.</figcaption>
+  </figure>
+</section>
+
+<section id="dryrun">
+  <span class="section-num">05</span>
+  <h2>Dry run: one real sentence</h2>
+  <p>Tracing <code>"The cat sat on the mat."</code> through the actual tokenizer
+  (<code>tiktoken.get_encoding("gpt2")</code>) and the exact nano-config being trained
+  right now — <span class="var-name">B=1</span>, tokenized to
+  <span class="var-name">T=7</span>, <span class="var-name">C=384</span>,
+  <span class="var-name">n_head=6</span>, <span class="var-name">hd=64</span>,
+  <span class="var-name">V=50,304</span>.</p>
+
+  <div class="panel">
+    <div class="badge-row">
+      <span class="badge">464 → "The"</span>
+      <span class="badge">3797 → " cat"</span>
+      <span class="badge">3332 → " sat"</span>
+      <span class="badge">319 → " on"</span>
+      <span class="badge">262 → " the"</span>
+      <span class="badge">2603 → " mat"</span>
+      <span class="badge">13 → "."</span>
+    </div>
+    <p style="margin:0; color:var(--text-muted); font-size:0.88rem;">
+      GPT-2 BPE splits on whitespace boundaries, so five of seven tokens carry a
+      leading space as part of the token itself — that's why <code>" cat"</code>, not
+      <code>"cat"</code>, is one token.
+    </p>
+  </div>
+
+  <div class="step-row">
+    <div class="step-tag">model.py:39</div>
+    <div class="step-body">
+      <b class="op">idx</b> = <span class="mono">[[464, 3797, 3332, 319, 262, 2603, 13]]</span>
+      <div class="shapes-line"><span class="shape hl">(1, 7)</span> int64 — <span class="var-name">B=1, T=7</span></div>
+    </div>
+  </div>
+  <div class="step-row">
+    <div class="step-tag">model.py:44–46</div>
+    <div class="step-body">
+      <b class="op">tok_emb</b> = <span class="mono">wte.weight[idx]</span> — gather 7 rows out of the (50304, 384) table.
+      <b class="op">pos_emb</b> = <span class="mono">wpe.weight[[0..6]]</span> — gather rows 0–6 out of the (256, 384) table.
+      <b class="op">x</b> = <span class="mono">tok_emb + pos_emb</span>
+      <div class="shapes-line">tok_emb <span class="shape">(1,7,384)</span> + pos_emb <span class="shape">(1,7,384)</span> → x <span class="shape hl">(1,7,384)</span></div>
+    </div>
+  </div>
+  <div class="step-row">
+    <div class="step-tag">layers.py<br/>Block ×6</div>
+    <div class="step-body">
+      Each of the 6 blocks runs, in order, on the running <span class="shape hl">(1,7,384)</span> stream:
+      <ol style="margin:0.6em 0 0; padding-left:1.3em;">
+        <li><code>LayerNorm(x)</code> → <span class="shape">(1,7,384)</span></li>
+        <li><code>c_attn</code>: Linear(384→1152) → <span class="shape">(1,7,1152)</span>, split into q,k,v each <span class="shape">(1,7,384)</span></li>
+        <li>split heads → <span class="shape">(1,6,7,64)</span> each</li>
+        <li><code>q @ kᵀ / √64</code> → attention scores <span class="shape">(1,6,7,7)</span>, add causal mask, softmax → <span class="shape">(1,6,7,7)</span></li>
+        <li><code>p @ v</code> → <span class="shape">(1,6,7,64)</span>, merge heads → <span class="shape">(1,7,384)</span></li>
+        <li><code>c_proj</code>: Linear(384→384) → <span class="shape">(1,7,384)</span>, add to residual</li>
+        <li><code>LayerNorm(x)</code> → <span class="shape">(1,7,384)</span></li>
+        <li><code>fc</code>: Linear(384→1536) → GELU → <code>proj</code>: Linear(1536→384) → <span class="shape">(1,7,384)</span>, add to residual</li>
+      </ol>
+      <div class="shapes-line">block in/out: <span class="shape hl">(1,7,384)</span> → <span class="shape hl">(1,7,384)</span> — width never changes, only what's written into it does</div>
+    </div>
+  </div>
+  <div class="step-row">
+    <div class="step-tag">model.py:50</div>
+    <div class="step-body">
+      <b class="op">h</b> = <span class="mono">ln_f.forward(x)</span> — final LayerNorm after block 6.
+      <div class="shapes-line"><span class="shape hl">(1,7,384)</span></div>
+    </div>
+  </div>
+  <div class="step-row">
+    <div class="step-tag">model.py:52</div>
+    <div class="step-body">
+      <b class="op">logits</b> = <span class="mono">h @ wte.weight.data.T</span> — (1,7,384) @ (384,50304).
+      This is the weight-tying moment: no separate output matrix, just the token-embedding
+      table transposed.
+      <div class="shapes-line"><span class="shape hl">(1, 7, 50304)</span></div>
+    </div>
+  </div>
+  <div class="step-row">
+    <div class="step-tag">model.py:57–58</div>
+    <div class="step-body">
+      Flatten to <span class="var-name">N=B·T=7</span>, compute
+      <span class="mono">softmax_cross_entropy(logits.reshape(7,50304), targets.reshape(7))</span>
+      against the next-token targets (each position's target is the next real token —
+      position 6's target would be whatever token follows the sentence).
+      <div class="shapes-line">loss: scalar &nbsp; · &nbsp; dlogits: <span class="shape grad">(7, 50304)</span></div>
+    </div>
+  </div>
+  <div class="step-row">
+    <div class="step-tag">model.py:63–86<br/>backward</div>
+    <div class="step-body">
+      <span class="mono">dlogits</span> flows back through the exact reverse path: into
+      <span class="var-name">dh</span> <span class="shape grad">(7,384)</span> and, simultaneously,
+      into <span class="mono">wte.weight.grad</span> <span class="shape grad">(50304,384)</span>
+      (contribution #1 of 2 — see §6's weight-tying note). <span class="var-name">dh</span> reshapes
+      to <span class="shape grad">(1,7,384)</span>, runs back through <code>ln_f</code>, all 6
+      blocks in reverse, then splits into <span class="mono">dtok_emb</span> and
+      <span class="mono">dpos_emb</span>, each <span class="shape grad">(1,7,384)</span>, which
+      scatter-add into <span class="mono">wte.weight.grad</span> (contribution #2) and
+      <span class="mono">wpe.weight.grad</span> respectively.
+    </div>
+  </div>
+</section>
+
+<section id="math">
+  <span class="section-num">06</span>
+  <h2>Math reference</h2>
+  <p>Every function with a nontrivial derivative, its forward formula, the backward
+  gradient actually coded in <code>layers.py</code>, and the numerical-stability
+  "ceiling" that keeps it from overflowing or dividing by zero at the extremes.</p>
+
+  <div class="func-card">
+    <h3>Linear <span class="file-tag">layers.py — Linear</span></h3>
+    <div class="formula-block">
+      <span class="label">forward</span>
+      <span class="expr">y = x·W + b</span>
+    </div>
+    <div class="formula-block back">
+      <span class="label">backward</span>
+      <span class="expr">dx = dy·Wᵀ
+dW = xᵀ·dy    (flattened over B·T)
+db = Σ dy     (summed over B·T)</span>
+    </div>
+  </div>
+
+  <div class="func-card">
+    <h3>LayerNorm <span class="file-tag">layers.py — LayerNorm</span></h3>
+    <div class="formula-block">
+      <span class="label">forward, normalizing over the last axis (size n = C)</span>
+      <span class="expr">μ  = mean(x)
+σ² = mean((x−μ)²)
+x̂  = (x−μ) / √(σ²+ε)
+y  = γ·x̂ + β</span>
+    </div>
+    <div class="formula-block back">
+      <span class="label">backward</span>
+      <span class="expr">dγ = Σ(dy · x̂)
+dβ = Σ dy
+dx̂ = dy · γ
+dx = [ n·dx̂ − Σdx̂ − x̂·Σ(dx̂·x̂) ] / (n·σ)</span>
+    </div>
+    <div class="stability-note">
+      <b>Ceiling:</b> <code>ε=1e-5</code> inside the square root prevents divide-by-zero
+      when a token's activations are (near-)constant across the C axis. The backward divides
+      by <code>σ</code> a second time — same guard needed there, easy to forget since it's
+      not visually adjacent to the epsilon in the forward pass.
+    </div>
+  </div>
+
+  <div class="func-card">
+    <h3>GELU (tanh approximation) <span class="file-tag">layers.py — GELU</span></h3>
+    <div class="formula-block">
+      <span class="label">forward — GPT-2's exact approximation, c = √(2/π)</span>
+      <span class="expr">inner = c·(x + 0.044715·x³)
+t     = tanh(inner)
+y     = 0.5·x·(1+t)</span>
+    </div>
+    <div class="formula-block back">
+      <span class="label">backward — product + chain rule through tanh</span>
+      <span class="expr">d(inner)/dx = c·(1 + 3·0.044715·x²)
+dy/dx = 0.5·(1+t) + 0.5·x·(1−t²)·d(inner)/dx
+dx    = dy_upstream · dy/dx</span>
+    </div>
+  </div>
+
+  <div class="func-card">
+    <h3>Embedding lookup <span class="file-tag">layers.py — Embedding</span></h3>
+    <div class="formula-block">
+      <span class="label">forward — row gather</span>
+      <span class="expr">y = table[idx]</span>
+    </div>
+    <div class="formula-block back">
+      <span class="label">backward — scatter-add, NOT scatter-assign</span>
+      <span class="expr">dtable[idx] += dy   (accumulate; np.add.at / cupyx.scatter_add)</span>
+    </div>
+    <div class="stability-note">
+      <b>Ceiling:</b> not a numerical one, a correctness one — the same token id can appear
+      more than once in a batch, and a plain <code>dtable[idx] = dy</code> would let the
+      later occurrence silently overwrite the earlier one's gradient instead of summing them.
+      Verified directly in <code>tests/test_gradients.py</code> by forcing a duplicate index.
+    </div>
+  </div>
+
+  <div class="func-card">
+    <h3>Softmax <span class="file-tag">layers.py — softmax / softmax_backward</span></h3>
+    <div class="formula-block">
+      <span class="label">forward</span>
+      <span class="expr">s = exp(x − max(x)) / Σ exp(x − max(x))</span>
+    </div>
+    <div class="formula-block back">
+      <span class="label">backward — contracted Jacobian, never materialized</span>
+      <span class="expr">ds = s · (dy − Σ(dy·s))</span>
+    </div>
+    <div class="stability-note">
+      <b>Ceiling:</b> subtracting <code>max(x)</code> before exponentiating caps the largest
+      exponent argument at 0, so <code>exp()</code> can never overflow float32/float64 range
+      regardless of how large the raw logits get — shifting doesn't change the result since
+      it cancels in the ratio. The backward form deliberately avoids building the full
+      T×T Jacobian per head; it contracts directly with the upstream gradient.
+    </div>
+  </div>
+
+  <div class="func-card">
+    <h3>Causal self-attention <span class="file-tag">layers.py — CausalSelfAttention</span></h3>
+    <div class="formula-block">
+      <span class="label">forward, per head</span>
+      <span class="expr">att = (q·kᵀ) / √hd  +  mask
+p   = softmax(att, axis=-1)
+y   = p·v</span>
+    </div>
+    <div class="formula-block back">
+      <span class="label">backward</span>
+      <span class="expr">dp  = dy·vᵀ
+dv  = pᵀ·dy
+datt = softmax_backward(p, dp) · (1/√hd)
+dq  = datt·k
+dk  = dattᵀ·q</span>
+    </div>
+    <div class="stability-note">
+      <b>Ceiling:</b> the causal mask adds <code>−inf</code> to future positions before the
+      softmax, which drives their probability to exactly 0 (not just small) — so their
+      gradient contribution through <code>softmax_backward</code> is exactly 0 too, with no
+      leakage from masked-out future tokens back into <code>q</code>/<code>k</code>. No
+      separate masking step is needed in the backward pass; it falls out of the math for free.
+    </div>
+  </div>
+
+  <div class="func-card">
+    <h3>Softmax cross-entropy <span class="file-tag">layers.py — softmax_cross_entropy</span></h3>
+    <div class="formula-block">
+      <span class="label">forward — computed via log-sum-exp, not via softmax then log</span>
+      <span class="expr">shifted   = logits − max(logits)
+logprobs  = shifted − log(Σ exp(shifted))
+loss      = mean( −logprobs[i, target_i] )</span>
+    </div>
+    <div class="formula-block back">
+      <span class="label">backward — the combined closed form, derived once</span>
+      <span class="expr">dlogits        = softmax(logits)
+dlogits[i,target_i] −= 1
+dlogits       /= N</span>
+    </div>
+    <div class="stability-note">
+      <b>Ceiling:</b> computing loss through <code>log-sum-exp</code> rather than
+      <code>log(softmax(x))</code> avoids ever taking <code>log</code> of a near-zero
+      probability. And the combined gradient <code>softmax(x) − one_hot(target)</code> is
+      used directly instead of differentiating softmax and negative-log-likelihood as two
+      separate steps — that separate path would divide by the predicted probability
+      somewhere, which is exactly the quantity that can be closest to zero for a wrong,
+      confident early-training prediction.
+    </div>
+  </div>
+
+  <div class="func-card">
+    <h3>Weight tying <span class="file-tag">model.py — GPT.backward</span></h3>
+    <p style="margin-top:-0.2em;">Not a single function, but a wiring detail worth its own
+    entry: <code>wte.weight</code> is read twice per forward pass — once as the embedding
+    table, once (transposed) as the output projection — so it must be written twice per
+    backward pass, and both writes have to add rather than replace.</p>
+    <figure>
+      <svg viewBox="0 0 640 220" role="img" aria-label="Two gradient sources, the output projection and the embedding lookup, both accumulate additively into the same wte weight gradient buffer">
+        <defs>
+          <marker id="arrow3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <style>
+          .b3 { fill:none; stroke:currentColor; stroke-width:1.3; }
+          .l3 { font-size:12px; fill:currentColor; }
+          .s3 { font-family: ui-monospace, monospace; font-size:10.5px; fill: var(--accent2); }
+          .f3 { stroke:currentColor; stroke-width:1.3; marker-end:url(#arrow3); }
+        </style>
+        <rect class="b3" x="20" y="20" width="220" height="42" rx="6"/>
+        <text class="l3" x="130" y="46" text-anchor="middle">dlogits.T @ h_flat</text>
+        <text class="s3" x="130" y="12" text-anchor="middle">from logits = h·wteᵀ</text>
+
+        <rect class="b3" x="20" y="150" width="220" height="42" rx="6"/>
+        <text class="l3" x="130" y="176" text-anchor="middle">scatter_add(·, idx, dtok_emb)</text>
+        <text class="s3" x="130" y="205" text-anchor="middle">from tok_emb = wte[idx]</text>
+
+        <line class="f3" x1="240" y1="52" x2="370" y2="98"/>
+        <line class="f3" x1="240" y1="160" x2="370" y2="112"/>
+        <text class="l3" x="300" y="70" text-anchor="middle" font-size="11">+=</text>
+        <text class="l3" x="300" y="160" text-anchor="middle" font-size="11">+=</text>
+
+        <rect class="b3" x="380" y="82" width="230" height="46" rx="6" stroke="var(--accent)"/>
+        <text class="l3" x="495" y="100" text-anchor="middle" style="fill:var(--accent)">wte.weight.grad</text>
+        <text class="s3" x="495" y="118" text-anchor="middle">(50304, 384)</text>
+      </svg>
+      <figcaption>Both usages write into the identical <code>Param.grad</code> buffer via
+      <code>+=</code> (never <code>=</code>) — the mechanism that makes weight tying's two
+      gradient sources merge instead of one silently overwriting the other.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="optim">
+  <span class="section-num">07</span>
+  <h2>AdamW — pure update math, no backward involved</h2>
+  <p>Once every <code>Param.grad</code> is populated, the optimizer never touches forward
+  or backward again — it's just the update rule from the paper, applied array-by-array.</p>
+  <div class="formula-block">
+    <span class="label">optim.py — AdamW.step, per parameter</span>
+    <span class="expr">m = β₁·m + (1−β₁)·g
+v = β₂·v + (1−β₂)·g²
+m̂ = m / (1−β₁ᵗ)
+v̂ = v / (1−β₂ᵗ)
+if ndim ≥ 2:  θ −= lr·λ·θ        (decoupled weight decay)
+θ −= lr · m̂ / (√v̂ + ε)</span>
+  </div>
+  <div class="stability-note">
+    <b>Ceiling:</b> <code>ε=1e-8</code> in the denominator prevents a division blow-up when
+    a parameter's gradient variance estimate <code>v̂</code> is still near zero, which happens
+    routinely in the first few steps before the exponential moving averages have accumulated
+    enough history. Weight decay is skipped for 1-D parameters (LayerNorm's <code>γ</code>/<code>β</code>,
+    every <code>Linear</code> bias) — decaying a bias or a norm gain toward zero has no
+    regularizing justification the way decaying a weight matrix does.
+  </div>
+  <p style="margin-top:1.4rem; color:var(--text-muted); font-size:0.9rem;">
+    Gradient clipping sits just before this, in <code>train.py</code>: the global L2 norm
+    across every parameter's gradient is computed, and if it exceeds 1.0, every gradient is
+    rescaled by <code>max_norm / total_norm</code> — a ceiling on how far a single noisy batch
+    can move the parameters in one step.
+  </p>
+</section>
+
+</main>
+
+<footer>
+  Companion to <code>REASONING.md</code> in the same repo. Generated while the real
+  training run (227M tokens, ~28,000 steps, GB10/cupy) was in progress — evals and
+  final plots come after training completes.
+</footer>

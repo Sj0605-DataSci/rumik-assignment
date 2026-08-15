@@ -1,0 +1,351 @@
+train tokens: 227,150,260  val tokens: 110,062
+model params: 30,062,592  device=cuda
+step     0 | train_loss 10.9012 | val_loss 10.9033 | val_ppl 54354.64 | lr 2.00e-06 | tok/s 0
+  step     0 | loss 10.8914 | lr 2.00e-06
+  step    50 | loss 9.2160 | lr 1.02e-04
+  step   100 | loss 7.3982 | lr 2.02e-04
+  step   150 | loss 6.8282 | lr 3.02e-04
+  step   200 | loss 6.7361 | lr 4.02e-04
+  step   250 | loss 6.8078 | lr 5.02e-04
+  step   300 | loss 6.3571 | lr 6.00e-04
+  step   350 | loss 6.2230 | lr 6.00e-04
+  step   400 | loss 6.2169 | lr 6.00e-04
+  step   450 | loss 6.2346 | lr 6.00e-04
+step   500 | train_loss 6.0798 | val_loss 6.0285 | val_ppl 415.08 | lr 6.00e-04 | tok/s 17099
+  step   500 | loss 6.1215 | lr 6.00e-04
+  step   550 | loss 6.1487 | lr 6.00e-04
+  step   600 | loss 6.0149 | lr 6.00e-04
+  step   650 | loss 5.9338 | lr 6.00e-04
+  step   700 | loss 6.0619 | lr 6.00e-04
+  step   750 | loss 5.8281 | lr 6.00e-04
+  step   800 | loss 5.7808 | lr 6.00e-04
+  step   850 | loss 5.6909 | lr 5.99e-04
+  step   900 | loss 5.7783 | lr 5.99e-04
+  step   950 | loss 5.6142 | lr 5.99e-04
+step  1000 | train_loss 5.6844 | val_loss 5.6448 | val_ppl 282.81 | lr 5.99e-04 | tok/s 17030
+  step  1000 | loss 5.6050 | lr 5.99e-04
+  step  1050 | loss 5.7345 | lr 5.99e-04
+  step  1100 | loss 5.5739 | lr 5.99e-04
+  step  1150 | loss 5.7579 | lr 5.99e-04
+  step  1200 | loss 5.3911 | lr 5.99e-04
+  step  1250 | loss 5.6413 | lr 5.98e-04
+  step  1300 | loss 5.3941 | lr 5.98e-04
+  step  1350 | loss 5.4245 | lr 5.98e-04
+  step  1400 | loss 5.5654 | lr 5.98e-04
+  step  1450 | loss 5.4690 | lr 5.98e-04
+step  1500 | train_loss 5.4918 | val_loss 5.4271 | val_ppl 227.49 | lr 5.98e-04 | tok/s 17069
+  step  1500 | loss 5.3882 | lr 5.98e-04
+  step  1550 | loss 5.4217 | lr 5.97e-04
+  step  1600 | loss 5.3980 | lr 5.97e-04
+  step  1650 | loss 5.5167 | lr 5.97e-04
+  step  1700 | loss 5.5703 | lr 5.97e-04
+  step  1750 | loss 5.5645 | lr 5.96e-04
+  step  1800 | loss 5.2675 | lr 5.96e-04
+  step  1850 | loss 5.2389 | lr 5.96e-04
+  step  1900 | loss 5.2800 | lr 5.96e-04
+  step  1950 | loss 5.3388 | lr 5.95e-04
+step  2000 | train_loss 5.3527 | val_loss 5.2888 | val_ppl 198.11 | lr 5.95e-04 | tok/s 17071
+  step  2000 | loss 5.4435 | lr 5.95e-04
+checkpoint saved: /home/sanyam-0605/Desktop/sanyam_projects/rumik assignment/out/ckpt_2000.npz
+  step  2050 | loss 5.2722 | lr 5.95e-04
+  step  2100 | loss 5.1643 | lr 5.94e-04
+  step  2150 | loss 5.4767 | lr 5.94e-04
+  step  2200 | loss 5.1496 | lr 5.94e-04
+  step  2250 | loss 5.2605 | lr 5.93e-04
+  step  2300 | loss 5.2573 | lr 5.93e-04
+  step  2350 | loss 5.0824 | lr 5.93e-04
+  step  2400 | loss 5.1351 | lr 5.92e-04
+  step  2450 | loss 5.2750 | lr 5.92e-04
+step  2500 | train_loss 5.2026 | val_loss 5.1295 | val_ppl 168.94 | lr 5.92e-04 | tok/s 17064
+  step  2500 | loss 5.2133 | lr 5.92e-04
+  step  2550 | loss 5.3073 | lr 5.91e-04
+  step  2600 | loss 5.0670 | lr 5.91e-04
+  step  2650 | loss 5.3758 | lr 5.90e-04
+  step  2700 | loss 5.1062 | lr 5.90e-04
+  step  2750 | loss 5.0929 | lr 5.90e-04
+  step  2800 | loss 5.0516 | lr 5.89e-04
+  step  2850 | loss 5.1509 | lr 5.89e-04
+  step  2900 | loss 5.2547 | lr 5.88e-04
+  step  2950 | loss 5.1917 | lr 5.88e-04
+step  3000 | train_loss 5.1309 | val_loss 5.0501 | val_ppl 156.04 | lr 5.87e-04 | tok/s 17066
+  step  3000 | loss 5.0479 | lr 5.87e-04
+  step  3050 | loss 4.9522 | lr 5.87e-04
+  step  3100 | loss 5.3509 | lr 5.86e-04
+  step  3150 | loss 5.0752 | lr 5.86e-04
+  step  3200 | loss 5.0450 | lr 5.86e-04
+  step  3250 | loss 5.1355 | lr 5.85e-04
+  step  3300 | loss 5.0166 | lr 5.85e-04
+  step  3350 | loss 5.2359 | lr 5.84e-04
+  step  3400 | loss 4.9037 | lr 5.83e-04
+  step  3450 | loss 5.0214 | lr 5.83e-04
+step  3500 | train_loss 5.0297 | val_loss 4.9744 | val_ppl 144.66 | lr 5.82e-04 | tok/s 17063
+  step  3500 | loss 4.9932 | lr 5.82e-04
+  step  3550 | loss 5.0287 | lr 5.82e-04
+  step  3600 | loss 4.9709 | lr 5.81e-04
+  step  3650 | loss 5.0280 | lr 5.81e-04
+  step  3700 | loss 4.9374 | lr 5.80e-04
+  step  3750 | loss 5.1084 | lr 5.80e-04
+  step  3800 | loss 5.0643 | lr 5.79e-04
+  step  3850 | loss 4.9810 | lr 5.78e-04
+  step  3900 | loss 5.0092 | lr 5.78e-04
+  step  3950 | loss 5.1472 | lr 5.77e-04
+step  4000 | train_loss 4.9511 | val_loss 4.8809 | val_ppl 131.75 | lr 5.77e-04 | tok/s 17055
+  step  4000 | loss 4.9059 | lr 5.77e-04
+checkpoint saved: /home/sanyam-0605/Desktop/sanyam_projects/rumik assignment/out/ckpt_4000.npz
+  step  4050 | loss 4.9409 | lr 5.76e-04
+  step  4100 | loss 4.9137 | lr 5.75e-04
+  step  4150 | loss 4.9479 | lr 5.75e-04
+  step  4200 | loss 4.8868 | lr 5.74e-04
+  step  4250 | loss 5.0462 | lr 5.73e-04
+  step  4300 | loss 4.9799 | lr 5.73e-04
+  step  4350 | loss 4.8780 | lr 5.72e-04
+  step  4400 | loss 4.9055 | lr 5.71e-04
+  step  4450 | loss 4.7747 | lr 5.71e-04
+step  4500 | train_loss 4.9103 | val_loss 4.8579 | val_ppl 128.75 | lr 5.70e-04 | tok/s 17024
+  step  4500 | loss 5.0099 | lr 5.70e-04
+  step  4550 | loss 4.8515 | lr 5.69e-04
+  step  4600 | loss 4.8812 | lr 5.69e-04
+  step  4650 | loss 4.8085 | lr 5.68e-04
+  step  4700 | loss 4.9556 | lr 5.67e-04
+  step  4750 | loss 4.7659 | lr 5.66e-04
+  step  4800 | loss 4.8483 | lr 5.66e-04
+  step  4850 | loss 4.9151 | lr 5.65e-04
+  step  4900 | loss 4.8494 | lr 5.64e-04
+  step  4950 | loss 4.8456 | lr 5.63e-04
+step  5000 | train_loss 4.8554 | val_loss 4.8248 | val_ppl 124.56 | lr 5.63e-04 | tok/s 17041
+  step  5000 | loss 4.8301 | lr 5.63e-04
+  step  5050 | loss 4.9659 | lr 5.62e-04
+  step  5100 | loss 4.7281 | lr 5.61e-04
+  step  5150 | loss 4.7742 | lr 5.60e-04
+  step  5200 | loss 4.8139 | lr 5.59e-04
+  step  5250 | loss 4.7239 | lr 5.59e-04
+  step  5300 | loss 4.9038 | lr 5.58e-04
+  step  5350 | loss 4.7973 | lr 5.57e-04
+  step  5400 | loss 4.8034 | lr 5.56e-04
+  step  5450 | loss 4.8256 | lr 5.55e-04
+step  5500 | train_loss 4.8625 | val_loss 4.7604 | val_ppl 116.80 | lr 5.54e-04 | tok/s 17029
+  step  5500 | loss 4.8879 | lr 5.54e-04
+  step  5550 | loss 4.7072 | lr 5.54e-04
+  step  5600 | loss 4.8899 | lr 5.53e-04
+  step  5650 | loss 4.7901 | lr 5.52e-04
+  step  5700 | loss 4.8620 | lr 5.51e-04
+  step  5750 | loss 4.9015 | lr 5.50e-04
+  step  5800 | loss 4.8891 | lr 5.49e-04
+  step  5850 | loss 4.6918 | lr 5.48e-04
+  step  5900 | loss 4.8770 | lr 5.47e-04
+  step  5950 | loss 4.8008 | lr 5.46e-04
+step  6000 | train_loss 4.7912 | val_loss 4.7335 | val_ppl 113.69 | lr 5.46e-04 | tok/s 17027
+  step  6000 | loss 4.7869 | lr 5.46e-04
+checkpoint saved: /home/sanyam-0605/Desktop/sanyam_projects/rumik assignment/out/ckpt_6000.npz
+  step  6050 | loss 4.7771 | lr 5.45e-04
+  step  6100 | loss 4.8275 | lr 5.44e-04
+  step  6150 | loss 4.8415 | lr 5.43e-04
+  step  6200 | loss 4.9128 | lr 5.42e-04
+  step  6250 | loss 4.6453 | lr 5.41e-04
+  step  6300 | loss 4.7100 | lr 5.40e-04
+  step  6350 | loss 4.7180 | lr 5.39e-04
+  step  6400 | loss 4.8194 | lr 5.38e-04
+  step  6450 | loss 4.7798 | lr 5.37e-04
+step  6500 | train_loss 4.7789 | val_loss 4.7240 | val_ppl 112.61 | lr 5.36e-04 | tok/s 16990
+  step  6500 | loss 4.6801 | lr 5.36e-04
+  step  6550 | loss 4.7145 | lr 5.35e-04
+  step  6600 | loss 4.7970 | lr 5.34e-04
+  step  6650 | loss 4.8659 | lr 5.33e-04
+  step  6700 | loss 4.7023 | lr 5.32e-04
+  step  6750 | loss 4.6836 | lr 5.31e-04
+  step  6800 | loss 4.5323 | lr 5.30e-04
+  step  6850 | loss 4.6617 | lr 5.29e-04
+  step  6900 | loss 4.8191 | lr 5.28e-04
+  step  6950 | loss 4.7500 | lr 5.27e-04
+step  7000 | train_loss 4.7113 | val_loss 4.6972 | val_ppl 109.64 | lr 5.26e-04 | tok/s 17010
+  step  7000 | loss 4.4983 | lr 5.26e-04
+  step  7050 | loss 4.6642 | lr 5.25e-04
+  step  7100 | loss 4.7558 | lr 5.24e-04
+  step  7150 | loss 4.8729 | lr 5.23e-04
+  step  7200 | loss 4.7727 | lr 5.21e-04
+  step  7250 | loss 4.6667 | lr 5.20e-04
+  step  7300 | loss 4.5691 | lr 5.19e-04
+  step  7350 | loss 4.6432 | lr 5.18e-04
+  step  7400 | loss 4.6973 | lr 5.17e-04
+  step  7450 | loss 4.7295 | lr 5.16e-04
+step  7500 | train_loss 4.6950 | val_loss 4.6439 | val_ppl 103.94 | lr 5.15e-04 | tok/s 17007
+  step  7500 | loss 4.6882 | lr 5.15e-04
+  step  7550 | loss 4.8243 | lr 5.14e-04
+  step  7600 | loss 4.5132 | lr 5.13e-04
+  step  7650 | loss 4.7857 | lr 5.11e-04
+  step  7700 | loss 4.5606 | lr 5.10e-04
+  step  7750 | loss 4.6388 | lr 5.09e-04
+  step  7800 | loss 4.5233 | lr 5.08e-04
+  step  7850 | loss 4.6637 | lr 5.07e-04
+  step  7900 | loss 4.7171 | lr 5.06e-04
+  step  7950 | loss 4.7037 | lr 5.05e-04
+step  8000 | train_loss 4.6762 | val_loss 4.6500 | val_ppl 104.59 | lr 5.03e-04 | tok/s 17006
+  step  8000 | loss 4.8099 | lr 5.03e-04
+checkpoint saved: /home/sanyam-0605/Desktop/sanyam_projects/rumik assignment/out/ckpt_8000.npz
+  step  8050 | loss 4.6642 | lr 5.02e-04
+  step  8100 | loss 4.6520 | lr 5.01e-04
+  step  8150 | loss 4.7418 | lr 5.00e-04
+  step  8200 | loss 4.6610 | lr 4.99e-04
+  step  8250 | loss 4.6319 | lr 4.97e-04
+  step  8300 | loss 4.6757 | lr 4.96e-04
+  step  8350 | loss 4.6148 | lr 4.95e-04
+  step  8400 | loss 4.7349 | lr 4.94e-04
+  step  8450 | loss 4.6624 | lr 4.93e-04
+step  8500 | train_loss 4.6370 | val_loss 4.6294 | val_ppl 102.45 | lr 4.91e-04 | tok/s 16931
+  step  8500 | loss 4.7194 | lr 4.91e-04
+  step  8550 | loss 4.6724 | lr 4.90e-04
+  step  8600 | loss 4.6839 | lr 4.89e-04
+  step  8650 | loss 4.6259 | lr 4.88e-04
+  step  8700 | loss 4.7628 | lr 4.86e-04
+  step  8750 | loss 4.4494 | lr 4.85e-04
+  step  8800 | loss 4.5798 | lr 4.84e-04
+  step  8850 | loss 4.5358 | lr 4.83e-04
+  step  8900 | loss 4.6023 | lr 4.81e-04
+  step  8950 | loss 4.5685 | lr 4.80e-04
+step  9000 | train_loss 4.6457 | val_loss 4.5923 | val_ppl 98.72 | lr 4.79e-04 | tok/s 17012
+  step  9000 | loss 4.5352 | lr 4.79e-04
+  step  9050 | loss 4.7342 | lr 4.78e-04
+  step  9100 | loss 4.6154 | lr 4.76e-04
+  step  9150 | loss 4.6389 | lr 4.75e-04
+  step  9200 | loss 4.6734 | lr 4.74e-04
+  step  9250 | loss 4.5508 | lr 4.72e-04
+  step  9300 | loss 4.5263 | lr 4.71e-04
+  step  9350 | loss 4.6035 | lr 4.70e-04
+  step  9400 | loss 4.4060 | lr 4.69e-04
+  step  9450 | loss 4.4960 | lr 4.67e-04
+step  9500 | train_loss 4.6084 | val_loss 4.5490 | val_ppl 94.54 | lr 4.66e-04 | tok/s 17008
+  step  9500 | loss 4.6015 | lr 4.66e-04
+  step  9550 | loss 4.7548 | lr 4.65e-04
+  step  9600 | loss 4.6017 | lr 4.63e-04
+  step  9650 | loss 4.6119 | lr 4.62e-04
+  step  9700 | loss 4.7426 | lr 4.61e-04
+  step  9750 | loss 4.4327 | lr 4.59e-04
+  step  9800 | loss 4.5617 | lr 4.58e-04
+  step  9850 | loss 4.5559 | lr 4.57e-04
+  step  9900 | loss 4.6053 | lr 4.55e-04
+  step  9950 | loss 4.4829 | lr 4.54e-04
+step 10000 | train_loss 4.6070 | val_loss 4.5879 | val_ppl 98.29 | lr 4.52e-04 | tok/s 17007
+  step 10000 | loss 4.6692 | lr 4.52e-04
+checkpoint saved: /home/sanyam-0605/Desktop/sanyam_projects/rumik assignment/out/ckpt_10000.npz
+  step 10050 | loss 4.5663 | lr 4.51e-04
+  step 10100 | loss 4.5805 | lr 4.50e-04
+  step 10150 | loss 4.5790 | lr 4.48e-04
+  step 10200 | loss 4.5162 | lr 4.47e-04
+  step 10250 | loss 4.5352 | lr 4.46e-04
+  step 10300 | loss 4.7531 | lr 4.44e-04
+  step 10350 | loss 4.5270 | lr 4.43e-04
+  step 10400 | loss 4.5603 | lr 4.41e-04
+  step 10450 | loss 4.3972 | lr 4.40e-04
+step 10500 | train_loss 4.5870 | val_loss 4.5508 | val_ppl 94.71 | lr 4.39e-04 | tok/s 16982
+  step 10500 | loss 4.6345 | lr 4.39e-04
+  step 10550 | loss 4.5348 | lr 4.37e-04
+  step 10600 | loss 4.5682 | lr 4.36e-04
+  step 10650 | loss 4.4667 | lr 4.34e-04
+  step 10700 | loss 4.4274 | lr 4.33e-04
+  step 10750 | loss 4.5940 | lr 4.32e-04
+  step 10800 | loss 4.7762 | lr 4.30e-04
+  step 10850 | loss 4.3957 | lr 4.29e-04
+  step 10900 | loss 4.5420 | lr 4.27e-04
+  step 10950 | loss 4.6296 | lr 4.26e-04
+step 11000 | train_loss 4.5886 | val_loss 4.5305 | val_ppl 92.80 | lr 4.24e-04 | tok/s 17006
+  step 11000 | loss 4.7418 | lr 4.24e-04
+  step 11050 | loss 4.6907 | lr 4.23e-04
+  step 11100 | loss 4.5446 | lr 4.22e-04
+  step 11150 | loss 4.3885 | lr 4.20e-04
+  step 11200 | loss 4.7103 | lr 4.19e-04
+  step 11250 | loss 4.6492 | lr 4.17e-04
+  step 11300 | loss 4.5687 | lr 4.16e-04
+  step 11350 | loss 4.6641 | lr 4.14e-04
+  step 11400 | loss 4.5101 | lr 4.13e-04
+  step 11450 | loss 4.5824 | lr 4.11e-04
+step 11500 | train_loss 4.5404 | val_loss 4.5410 | val_ppl 93.78 | lr 4.10e-04 | tok/s 17007
+  step 11500 | loss 4.5643 | lr 4.10e-04
+  step 11550 | loss 4.6408 | lr 4.08e-04
+  step 11600 | loss 4.5030 | lr 4.07e-04
+  step 11650 | loss 4.4887 | lr 4.06e-04
+  step 11700 | loss 4.5794 | lr 4.04e-04
+  step 11750 | loss 4.7265 | lr 4.03e-04
+  step 11800 | loss 4.5425 | lr 4.01e-04
+  step 11850 | loss 4.5715 | lr 4.00e-04
+  step 11900 | loss 4.5733 | lr 3.98e-04
+  step 11950 | loss 4.4787 | lr 3.97e-04
+step 12000 | train_loss 4.5859 | val_loss 4.5087 | val_ppl 90.80 | lr 3.95e-04 | tok/s 17008
+  step 12000 | loss 4.5143 | lr 3.95e-04
+checkpoint saved: /home/sanyam-0605/Desktop/sanyam_projects/rumik assignment/out/ckpt_12000.npz
+  step 12050 | loss 4.6001 | lr 3.94e-04
+  step 12100 | loss 4.5248 | lr 3.92e-04
+  step 12150 | loss 4.5384 | lr 3.91e-04
+  step 12200 | loss 4.3665 | lr 3.89e-04
+  step 12250 | loss 4.6202 | lr 3.88e-04
+  step 12300 | loss 4.5055 | lr 3.86e-04
+  step 12350 | loss 4.7243 | lr 3.85e-04
+  step 12400 | loss 4.4848 | lr 3.83e-04
+  step 12450 | loss 4.4989 | lr 3.82e-04
+step 12500 | train_loss 4.5185 | val_loss 4.4850 | val_ppl 88.68 | lr 3.80e-04 | tok/s 16976
+  step 12500 | loss 4.6314 | lr 3.80e-04
+  step 12550 | loss 4.4661 | lr 3.79e-04
+  step 12600 | loss 4.6058 | lr 3.77e-04
+  step 12650 | loss 4.5377 | lr 3.76e-04
+  step 12700 | loss 4.4844 | lr 3.74e-04
+  step 12750 | loss 4.3967 | lr 3.73e-04
+  step 12800 | loss 4.5746 | lr 3.71e-04
+  step 12850 | loss 4.3337 | lr 3.70e-04
+  step 12900 | loss 4.4221 | lr 3.68e-04
+  step 12950 | loss 4.4198 | lr 3.67e-04
+step 13000 | train_loss 4.5248 | val_loss 4.4691 | val_ppl 87.28 | lr 3.65e-04 | tok/s 17015
+  step 13000 | loss 4.5493 | lr 3.65e-04
+  step 13050 | loss 4.5722 | lr 3.64e-04
+  step 13100 | loss 4.6721 | lr 3.62e-04
+  step 13150 | loss 4.4320 | lr 3.61e-04
+  step 13200 | loss 4.5919 | lr 3.59e-04
+  step 13250 | loss 4.5248 | lr 3.58e-04
+  step 13300 | loss 4.4196 | lr 3.56e-04
+  step 13350 | loss 4.5282 | lr 3.54e-04
+  step 13400 | loss 4.6455 | lr 3.53e-04
+  step 13450 | loss 4.4992 | lr 3.51e-04
+step 13500 | train_loss 4.5097 | val_loss 4.4578 | val_ppl 86.30 | lr 3.50e-04 | tok/s 17011
+  step 13500 | loss 4.4924 | lr 3.50e-04
+  step 13550 | loss 4.5704 | lr 3.48e-04
+  step 13600 | loss 4.4564 | lr 3.47e-04
+  step 13650 | loss 4.4187 | lr 3.45e-04
+  step 13700 | loss 4.5152 | lr 3.44e-04
+  step 13750 | loss 4.4365 | lr 3.42e-04
+  step 13800 | loss 4.3567 | lr 3.41e-04
+  step 13850 | loss 4.3908 | lr 3.39e-04
+  step 13900 | loss 4.5358 | lr 3.38e-04
+  step 13950 | loss 4.3741 | lr 3.36e-04
+step 14000 | train_loss 4.4829 | val_loss 4.4677 | val_ppl 87.16 | lr 3.35e-04 | tok/s 17013
+  step 14000 | loss 4.6683 | lr 3.35e-04
+checkpoint saved: /home/sanyam-0605/Desktop/sanyam_projects/rumik assignment/out/ckpt_14000.npz
+  step 14050 | loss 4.5891 | lr 3.33e-04
+  step 14100 | loss 4.4066 | lr 3.32e-04
+  step 14150 | loss 4.4026 | lr 3.30e-04
+  step 14200 | loss 4.5395 | lr 3.28e-04
+  step 14250 | loss 4.3791 | lr 3.27e-04
+  step 14300 | loss 4.5865 | lr 3.25e-04
+  step 14350 | loss 4.3789 | lr 3.24e-04
+  step 14400 | loss 4.3893 | lr 3.22e-04
+  step 14450 | loss 4.6132 | lr 3.21e-04
+step 14500 | train_loss 4.4682 | val_loss 4.4380 | val_ppl 84.60 | lr 3.19e-04 | tok/s 16980
+  step 14500 | loss 4.3203 | lr 3.19e-04
+  step 14550 | loss 4.5458 | lr 3.18e-04
+  step 14600 | loss 4.5682 | lr 3.16e-04
+  step 14650 | loss 4.4647 | lr 3.15e-04
+  step 14700 | loss 4.3619 | lr 3.13e-04
+  step 14750 | loss 4.5128 | lr 3.12e-04
+  step 14800 | loss 4.4525 | lr 3.10e-04
+  step 14850 | loss 4.4663 | lr 3.09e-04
+  step 14900 | loss 4.4721 | lr 3.07e-04
+  step 14950 | loss 4.4693 | lr 3.06e-04
+step 15000 | train_loss 4.4658 | val_loss 4.4320 | val_ppl 84.10 | lr 3.04e-04 | tok/s 17011
+  step 15000 | loss 4.3278 | lr 3.04e-04
+  step 15050 | loss 4.4879 | lr 3.02e-04
+  step 15100 | loss 4.3300 | lr 3.01e-04
+  step 15150 | loss 4.4207 | lr 2.99e-04
+  step 15200 | loss 4.4485 | lr 2.98e-04
+  step 15250 | loss 4.3213 | lr 2.96e-04
+  step 15300 | loss 4.5771 | lr 2.95e-04
+  step 15350 | loss 4.3759 | lr 2.93e-04
+  step 15400 | loss 4.4135 | lr 2.92e-04
+  step 15450 | loss 4.5089 | lr 2.90e-04
+step 15500 | train_loss 4.4247 | val_loss 4.4365 | val_ppl 84.48 | lr 2.89e-04 | tok/s 17010
