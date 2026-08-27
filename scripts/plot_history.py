@@ -1,5 +1,3 @@
-"""Plot train/val loss and val perplexity curves from out/history.json."""
-
 import argparse
 import json
 from pathlib import Path

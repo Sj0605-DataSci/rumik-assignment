@@ -1,13 +1,3 @@
-"""Downstream LM benchmark: WikiText-2 perplexity (raw, test split).
-
-Chosen per REASONING.md sec 8: cheap, standard, and a direct measure of LM
-quality with no extra labeled-task scaffolding. Loads a checkpoint saved by
-train.py, tokenizes WikiText-2's test split with the same GPT-2 BPE used in
-training, chunks it into non-overlapping block_size windows, and reports
-mean cross-entropy + perplexity -- forward pass only, no backward/training
-code touched here.
-"""
-
 import argparse
 import sys
 from pathlib import Path

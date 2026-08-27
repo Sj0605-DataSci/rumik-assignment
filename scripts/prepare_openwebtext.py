@@ -1,22 +1,3 @@
-"""Data prep for OpenWebText, adapted from nanoGPT's data/openwebtext/prepare.py.
-
-Pure data plumbing (download parquet shards, BPE-encode with tiktoken, write
-memmap-able uint16 .bin shards) -- unrelated to the no-autograd constraint,
-so there's no reason to reinvent nanoGPT's approach here (the assignment
-explicitly allows reusing nanoGPT for "dataset shuffling and scaffolding").
-
-Downloads whole parquet shards from the public Skylion007/openwebtext mirror
-(80 shards, ~110M tokens each) via huggingface_hub rather than the `datasets`
-streaming iterator: the streaming path's background prefetch threads proved
-flaky under unauthenticated rate limits on this box (dropped connections
-during retries crashed the interpreter's GIL state on cleanup, after the
-data had already been written -- see REASONING.md roadblock log). Whole-shard
-download is simpler, resumable, and each shard alone comfortably covers the
-scaled-down token budget from REASONING.md sec 7.
-
-Writes data/openwebtext/{train,val}.bin as flat uint16 token arrays.
-"""
-
 import argparse
 import sys
 from pathlib import Path

@@ -16,32 +16,41 @@ Two ways to satisfy "no autograd" were on the table: (1) hand-derive and hand-co
 the backward pass for every layer, or (2) write a small tensor autograd engine and
 let it compose backward passes automatically. This project takes **route 1**. Every
 layer in [`src/nanograd_gpt/layers/`](src/nanograd_gpt/layers/) is its own file with
-a class exposing an explicit `forward()` and a separately hand-derived `backward()` —
+a class exposing an explicit `forward()` and a separately derived `backward()` —
 no computation graph, no tape, no generic `Tensor.backward()`. The "graph" is just the
 fixed Python composition order in [`model.py`](src/nanograd_gpt/model.py).
 
-Correctness is verified independently, not just asserted: every hand-derived backward
+Correctness is verified independently, not just asserted: every backward pass
 is checked against central-difference numerical gradients in
 [`tests/test_gradients.py`](tests/test_gradients.py), matching to ~1e-10 on float64,
 for every layer individually and for the full wired-together model (catching wiring
 bugs — e.g. the weight-tying gradient merge — that per-layer checks alone can't see).
 
+**Code origin, stated plainly:** `src/nanograd_gpt/layers/` (except `gelu.py` and
+pre-norm ordering in `block.py`) is adapted from
+[priyammaz/ManualTransformer](https://github.com/priyammaz/ManualTransformer)
+(MIT License — see [`LICENSE-ManualTransformer.txt`](LICENSE-ManualTransformer.txt)),
+at explicit request after the original hand-derived version (still what produced
+every training run in the Results table below) had already been built, gradient-checked,
+and trained three times. The assignment is explicit — *"own each and every line that
+you ship"* — and swapping in an adapted third-party implementation is a real deviation
+from that, even reorganized into per-op files and even with full attribution; that
+tension was raised directly before making the change, and proceeding was a deliberate,
+informed choice, not an oversight. `model.py` (weight tying), `optim.py` (AdamW with
+decoupled weight decay, grad clipping, cosine schedule), and the data
+pipeline were kept as this project's own throughout — the source repo's `model.py`/
+`optim.py` don't tie weights and use plain `Adam` with no decay/clipping/schedule,
+which would have reversed earlier decisions made for this project (see
+[REASONING.md §12](REASONING.md) for the full account, including a real bug found
+and fixed while porting — the source's `CrossEntropyLoss` backward doesn't divide by
+batch size, inconsistent with its own mean-reduction forward).
+
 A second, fully pure-function rewrite with **zero classes** — every function takes
 plain arrays and an explicit `xp` (numpy/cupy) argument, nothing hidden on `self` —
-lives in [`src/nanograd_gpt/simple.py`](src/nanograd_gpt/simple.py), kept purely as
-a from-scratch teaching reference alongside the class-based version actually used for
-training.
-
-[priyammaz/ManualTransformer](https://github.com/priyammaz/ManualTransformer) was
-checked as a reference point (inspected, not run, not copied from — "own every line"
-applies). It turns out to take the same route: a `GradTensor`/`Operation` base-class
-pattern nearly identical in spirit to this repo's `Param`/`Module`, hand-derived
-`forward`/`backward` per op, no autograd tape, NumPy/CuPy backend. Its `LayerNorm`
-backward independently arrives at the same two-correction-term formula used here —
-a useful outside cross-check that the derivation is the standard one, not a coincidence
-of one particular way of writing it. It's a single 712-line `nn.py`, not a multi-file
-layout; the per-file split under `layers/` in this repo is this project's own
-organizational choice, not something borrowed from theirs.
+lives in [`src/nanograd_gpt/simple.py`](src/nanograd_gpt/simple.py). It predates the
+ManualTransformer swap and was left as this project's own original derivation, kept
+as a from-scratch teaching reference alongside the class-based version actually used
+for training.
 
 ## Architecture
 
@@ -139,31 +148,45 @@ and that fixing a token-budget mistake (below) has a large, measurable effect.
   gradient-checked, but every run above used `p=0.0` — nanoGPT's own pretraining
   convention (dropout mainly matters for finetuning) — so it had no numerical effect on
   any of these three runs' results.
-- **Residual-projection init scaling** (`1/√(2·n_layer)` on `c_proj`/`mlp.proj`) is
-  implemented and verified, and *is* active in runs 2 and 2b (both constructed after
-  the fix landed), but run 1 was already in progress when the fix landed and finished
-  on the older uniform-std init — noted for completeness, not corrected retroactively.
+- **Residual-projection init scaling** (`1/√(2·n_layer)` on attention's `out_linear`
+  and the MLP's `linear2`) is implemented and verified, and *is* active in runs 2 and
+  2b (both constructed after the fix landed), but run 1 was already in progress when
+  the fix landed and finished on the older uniform-std init — noted for completeness,
+  not corrected retroactively.
 - None of the three runs reached full convergence — run 1 was stopped manually at 59%
   of its planned budget to free the GPU; runs 2/2b completed their planned token
   budgets but longer runs would likely still be improving (see the loss curves).
+- **Layer code origin**: `src/nanograd_gpt/layers/` (except `gelu.py` and pre-norm
+  block ordering) is adapted from priyammaz/ManualTransformer, not independently
+  derived — see the Approach section above and
+  [REASONING.md §12](REASONING.md) for the full, direct account of that decision.
+  All three runs above were trained and evaluated on the original hand-derived code,
+  before that swap; re-verified against the adapted code afterward via the same
+  gradient-check suite, but not retrained on it.
 
 ## Repo layout
 
 ```
-REASONING.md              design rationale, decisions
-docs/gpt2_explainer.html  architecture diagrams + real-sentence shape trace
+REASONING.md                       design rationale, decisions
+LICENSE-ManualTransformer.txt      required MIT attribution for adapted layer code
+docs/gpt2_explainer.html           architecture diagrams + real-sentence shape trace
 src/nanograd_gpt/
   backend.py              numpy/cupy switch (get_xp, scatter_add)
   param.py                Param: array + gradient buffer
-  layers/                 one class per file, hand-coded forward()/backward():
+  layers/                 one class per file, forward()/backward() each
+                           (adapted from priyammaz/ManualTransformer except
+                           gelu.py and block.py's pre-norm ordering -- see
+                           each file's own docstring for what changed/why):
     module.py               Module base class
     linear.py, layernorm.py, gelu.py, embedding.py, dropout.py
-    softmax.py               softmax, softmax_backward, softmax_cross_entropy
-    attention.py             CausalSelfAttention
-    mlp.py, block.py
-  model.py                GPTConfig, GPT (assembly + weight tying)
-  optim.py                AdamW, cosine LR schedule
-  simple.py                same architecture, zero classes, pure functions
+    softmax.py               softmax, softmax_backward, softmax_cross_entropy,
+                              softmax_slow (explicit-Jacobian, educational)
+    attention.py             CausalSelfAttention (q_linear/k_linear/v_linear/out_linear)
+    mlp.py, block.py         MLP (linear1/gelu/linear2), Block (attention/ff/norm1/norm2)
+  model.py                GPTConfig, GPT (assembly + weight tying) -- this project's own
+  optim.py                AdamW, cosine LR schedule -- this project's own
+  simple.py                same architecture, zero classes, pure functions -- this
+                           project's own, predates the ManualTransformer swap
 tests/test_gradients.py   numerical gradient checks, every layer + full model
 scripts/
   prepare_openwebtext.py  data download + BPE tokenization -> .bin shards

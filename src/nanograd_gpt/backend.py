@@ -1,10 +1,3 @@
-"""Array backend switch: numpy for CPU (gradient checks, tests), cupy for GPU training.
-
-No autograd lives here or anywhere else in this package - cupy is used purely
-as a drop-in ndarray/BLAS replacement, exactly like numpy. Every gradient in
-this codebase is computed by hand in layers.py.
-"""
-
 import numpy as np
 
 _CUPY = None

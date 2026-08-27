@@ -1,8 +1,3 @@
-"""Measure real forward+backward+AdamW tokens/sec on GB10 for a candidate
-config, on random data, so the token budget in REASONING.md sec 7 is picked
-from a measurement rather than a guess.
-"""
-
 import argparse
 import sys
 import time

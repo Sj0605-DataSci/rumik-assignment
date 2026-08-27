@@ -1,17 +1,3 @@
-"""GPT-2, rewritten with zero classes and zero hidden state.
-
-This file is a teaching companion to layers.py/model.py (the version actually
-training on the GPU right now) -- same math, same architecture, but every
-function is a pure function: it takes plain numpy/cupy arrays in, returns
-plain arrays out, and NEVER stashes anything on `self` because there is no
-`self`. Parameters live in a plain nested dict. Every function takes `xp`
-(numpy or cupy) as an explicit argument, so swapping backend is just passing
-a different module in -- nothing about the functions themselves changes.
-
-Read top to bottom: linear -> layernorm -> gelu -> embedding -> softmax ->
-attention -> mlp -> block -> full model -> loss -> optimizer.
-"""
-
 import math
 
 

@@ -1,9 +1,3 @@
-"""Training loop: data batching, cosine LR schedule w/ warmup, AdamW step,
-checkpointing, and loss/perplexity logging. Mirrors nanoGPT's train.py
-scaffolding (data loading + schedule), but every forward/backward call goes
-through the hand-derived gradients in nanograd_gpt/layers.py -- no autograd.
-"""
-
 import argparse
 import json
 import sys

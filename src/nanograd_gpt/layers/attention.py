@@ -1,89 +1,95 @@
 import math
 
-from .dropout import Dropout
 from .linear import Linear
 from .module import Module
 from .softmax import softmax, softmax_backward
 
 
 class CausalSelfAttention(Module):
-    def __init__(self, n_embd, n_head, block_size, xp, std=0.02, proj_std=None, dropout=0.0, dtype=None):
+    def __init__(self, embed_dim, num_heads, block_size, xp, std=0.02, proj_std=None, dtype=None):
         super().__init__()
-        assert n_embd % n_head == 0
+        assert embed_dim % num_heads == 0, "embed_dim must be divisible by num_heads"
         self.xp = xp
         dtype = dtype or xp.float32
         proj_std = std if proj_std is None else proj_std
-        self.n_embd, self.n_head = n_embd, n_head
-        self.hd = n_embd // n_head
-        self.c_attn = self.add_module(Linear(n_embd, 3 * n_embd, xp, std=std, dtype=dtype))
-        # c_proj feeds straight into the residual stream, so it gets the
-        # GPT-2-paper 1/sqrt(2*n_layer) scaled init, not the general `std`
-        # (see GPT.__init__ for where proj_std is computed) -- keeps
-        # residual-stream variance from growing unboundedly with depth.
-        self.c_proj = self.add_module(Linear(n_embd, n_embd, xp, std=proj_std, dtype=dtype))
-        # additive causal mask, -inf strictly above the diagonal
-        mask = xp.triu(xp.full((block_size, block_size), -xp.inf, dtype=dtype), k=1)
-        self.mask = mask
-        self.attn_dropout = self.add_module(Dropout(dropout, xp))
-        self.resid_dropout = self.add_module(Dropout(dropout, xp))
+        self.embed_dim, self.num_heads = embed_dim, num_heads
+        self.head_dim = embed_dim // num_heads
+
+        self.q_linear = self.add_module(Linear(embed_dim, embed_dim, xp, std=std, dtype=dtype))
+        self.k_linear = self.add_module(Linear(embed_dim, embed_dim, xp, std=std, dtype=dtype))
+        self.v_linear = self.add_module(Linear(embed_dim, embed_dim, xp, std=std, dtype=dtype))
+        self.out_linear = self.add_module(Linear(embed_dim, embed_dim, xp, std=proj_std, dtype=dtype))
+
+        self.mask = xp.triu(xp.full((block_size, block_size), -xp.inf, dtype=dtype), k=1)
         self._cache = None
 
-    def _split_heads(self, x, B, T):
-        # (B,T,C) -> (B,nh,T,hd)
-        return x.reshape(B, T, self.n_head, self.hd).transpose(0, 2, 1, 3)
-
-    def _merge_heads(self, x, B, T):
-        # (B,nh,T,hd) -> (B,T,C)
-        return x.transpose(0, 2, 1, 3).reshape(B, T, self.n_embd)
-
-    def forward(self, x, training=True):
+    def forward(self, x):
+        """x: (batch_size, seq_len, embed_dim)."""
         xp = self.xp
-        B, T, C = x.shape
-        qkv = self.c_attn.forward(x)
-        q, k, v = xp.split(qkv, 3, axis=-1)
-        q = self._split_heads(q, B, T)
-        k = self._split_heads(k, B, T)
-        v = self._split_heads(v, B, T)
+        batch_size, seq_len, _ = x.shape
 
-        scale = 1.0 / math.sqrt(self.hd)
-        att = (q @ k.transpose(0, 1, 3, 2)) * scale
-        att = att + self.mask[:T, :T]
-        p = softmax(xp, att, axis=-1)             # true attention probabilities, each row sums to 1
-        p_drop = self.attn_dropout.forward(p, training)  # what actually multiplies v below
-        y = p_drop @ v  # (B,nh,T,hd)
-        y = self._merge_heads(y, B, T)
-        out = self.c_proj.forward(y)
-        out = self.resid_dropout.forward(out, training)
+        x_flat = x.reshape(batch_size * seq_len, self.embed_dim)
+        q = self.q_linear.forward(x_flat)
+        k = self.k_linear.forward(x_flat)
+        v = self.v_linear.forward(x_flat)
 
-        # cache BOTH p (needed by softmax_backward's Jacobian formula, which
-        # assumes rows summing to 1 -- no longer true after dropout) and
-        # p_drop (needed for dv, since the forward matmul actually used p_drop)
-        self._cache = (q, k, v, p, p_drop, B, T, scale)
+        q = q.reshape(batch_size, seq_len, self.num_heads, self.head_dim).transpose(0, 2, 1, 3)
+        k = k.reshape(batch_size, seq_len, self.num_heads, self.head_dim).transpose(0, 2, 1, 3)
+        v = v.reshape(batch_size, seq_len, self.num_heads, self.head_dim).transpose(0, 2, 1, 3)
+
+        scale = 1.0 / math.sqrt(self.head_dim)
+        scores = (q @ k.transpose(0, 1, 3, 2)) * scale
+        scores = scores + self.mask[:seq_len, :seq_len]
+
+        probs = softmax(xp, scores, axis=-1)
+        attn = probs @ v  # (batch, heads, seq, head_dim)
+
+        attn = attn.transpose(0, 2, 1, 3).reshape(batch_size, seq_len, self.embed_dim)
+        attn_flat = attn.reshape(batch_size * seq_len, self.embed_dim)
+        out = self.out_linear.forward(attn_flat)
+        out = out.reshape(batch_size, seq_len, self.embed_dim)
+
+        self._cache = (q, k, v, probs, batch_size, seq_len, scale)
         return out
 
-    def backward(self, dout):
+    def backward(self, output_grad):
         xp = self.xp
-        q, k, v, p, p_drop, B, T, scale = self._cache
+        q, k, v, probs, batch_size, seq_len, scale = self._cache
 
-        dout = self.resid_dropout.backward(dout)
-        dy = self.c_proj.backward(dout)  # (B,T,C)
-        dy = self._split_heads(dy, B, T)  # (B,nh,T,hd)
+        output_grad_flat = output_grad.reshape(batch_size * seq_len, self.embed_dim)
+        grad_attn_flat = self.out_linear.backward(output_grad_flat)
+        grad_attn = grad_attn_flat.reshape(batch_size, seq_len, self.num_heads, self.head_dim).transpose(0, 2, 1, 3)
 
-        dp_drop = dy @ v.transpose(0, 1, 3, 2)  # (B,nh,T,T), gradient w.r.t. p_drop
-        dv = p_drop.transpose(0, 1, 3, 2) @ dy  # (B,nh,T,hd)
+        # Backward through attn = probs @ v: dL/dprobs = dL/dattn . v^T, dL/dv = probs^T . dL/dattn
+        grad_probs = grad_attn @ v.transpose(0, 1, 3, 2)
+        grad_v = probs.transpose(0, 1, 3, 2) @ grad_attn
 
-        dp = self.attn_dropout.backward(dp_drop)  # un-does the dropout mask -> gradient w.r.t. p
-        datt = softmax_backward(xp, p, dp, axis=-1)  # mask positions: p=0 -> datt=0 there too
-        datt = datt * scale
+        grad_scores = softmax_backward(xp, probs, grad_probs, axis=-1)
+        # masked positions already have probs=0, so softmax_backward already
+        # produced exactly 0 there -- no extra masking step needed here
+        grad_scores = grad_scores * scale
 
-        dq = datt @ k  # (B,nh,T,hd)
-        dk = datt.transpose(0, 1, 3, 2) @ q  # (B,nh,T,hd)
+        # scores = q @ k^T: dL/dQ = dL/dS . K, dL/dK = dL/dS^T . Q
+        grad_q = grad_scores @ k
+        grad_k = grad_scores.transpose(0, 1, 3, 2) @ q
 
-        dq = self._merge_heads(dq, B, T)
-        dk = self._merge_heads(dk, B, T)
-        dv = self._merge_heads(dv, B, T)
-        dqkv = xp.concatenate([dq, dk, dv], axis=-1)
+        grad_q = grad_q.transpose(0, 2, 1, 3).reshape(batch_size, seq_len, self.embed_dim)
+        grad_k = grad_k.transpose(0, 2, 1, 3).reshape(batch_size, seq_len, self.embed_dim)
+        grad_v = grad_v.transpose(0, 2, 1, 3).reshape(batch_size, seq_len, self.embed_dim)
 
-        dx = self.c_attn.backward(dqkv)
+        grad_q_flat = grad_q.reshape(batch_size * seq_len, self.embed_dim)
+        grad_k_flat = grad_k.reshape(batch_size * seq_len, self.embed_dim)
+        grad_v_flat = grad_v.reshape(batch_size * seq_len, self.embed_dim)
+
+        grad_query = self.q_linear.backward(grad_q_flat)
+        grad_key = self.k_linear.backward(grad_k_flat)
+        grad_value = self.v_linear.backward(grad_v_flat)
+
+        grad_query = grad_query.reshape(batch_size, seq_len, self.embed_dim)
+        grad_key = grad_key.reshape(batch_size, seq_len, self.embed_dim)
+        grad_value = grad_value.reshape(batch_size, seq_len, self.embed_dim)
+
         self._cache = None
-        return dx
+        # self-attention: query=key=value=x, so the three gradient paths
+        # back into x all add together
+        return grad_query + grad_key + grad_value

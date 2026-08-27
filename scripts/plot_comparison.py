@@ -1,8 +1,3 @@
-"""Combined val-loss/perplexity comparison across all training runs, x-axis in
-tokens processed (not steps) so runs with different batch/block sizes are
-directly comparable.
-"""
-
 import json
 from pathlib import Path
 

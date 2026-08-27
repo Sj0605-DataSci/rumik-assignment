@@ -1,10 +1,3 @@
-"""Sanity check #4 from REASONING.md: a tiny model should drive loss to ~0
-on a single repeated batch. First real end-to-end signal that backward
-wiring + AdamW actually work together, before spending compute on real data.
-
-Usage: python scripts/overfit_one_batch.py [--device cpu|cuda]
-"""
-
 import argparse
 import sys
 import time
