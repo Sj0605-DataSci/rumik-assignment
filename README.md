@@ -201,3 +201,4 @@ python scripts/plot_comparison.py
 python scripts/eval_wikitext2.py --ckpt out/run2b_gpt2small_135M/ckpt_final.npz \
     --device cuda --n-layer 12 --n-head 12 --n-embd 768 --block-size 1024
 ```
+
