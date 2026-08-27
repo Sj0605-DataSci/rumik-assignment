@@ -1,3 +1,13 @@
+"""Numerical gradient checks for every hand-written backward pass.
+
+This is the primary evidence that the calculus in layers.py/model.py is
+correct: central-difference numerical gradients on float64 tensors, compared
+against the analytic gradients produced by each layer's backward(). Runs on
+plain numpy (xp=np) -- these tensors are tiny, no reason to touch the GPU.
+
+Run directly with `python tests/test_gradients.py`, or via `pytest tests/`.
+"""
+
 import sys
 from pathlib import Path
 
@@ -65,8 +75,8 @@ def rand(*shape):
 def test_linear():
     print("Linear")
     lin = Linear(5, 7, np, dtype=np.float64)
-    x = rand(12, 5)  # Linear is 2D-only (matches ManualTransformer's convention);
-    dy = rand(12, 7)  # callers (attention.py, mlp.py) flatten (B,T,C) -> (B*T,C) first
+    x = rand(3, 4, 5)
+    dy = rand(3, 4, 7)
 
     def loss():
         return float(np.sum(dy * lin.forward(x)))
@@ -153,10 +163,10 @@ def test_causal_self_attention():
 
     g, idx = numerical_grad(loss, x)
     assert_close_at(dx, g, idx, "Attention dx")
-    g, idx = numerical_grad(loss, attn.q_linear.W.data)
-    assert_close_at(attn.q_linear.W.grad, g, idx, "Attention dW_q")
-    g, idx = numerical_grad(loss, attn.out_linear.W.data)
-    assert_close_at(attn.out_linear.W.grad, g, idx, "Attention dW_out")
+    g, idx = numerical_grad(loss, attn.c_attn.W.data)
+    assert_close_at(attn.c_attn.W.grad, g, idx, "Attention dW_qkv")
+    g, idx = numerical_grad(loss, attn.c_proj.W.data)
+    assert_close_at(attn.c_proj.W.grad, g, idx, "Attention dW_proj")
 
 
 def test_mlp():
@@ -174,8 +184,8 @@ def test_mlp():
 
     g, idx = numerical_grad(loss, x)
     assert_close_at(dx, g, idx, "MLP dx")
-    g, idx = numerical_grad(loss, mlp.linear1.W.data)
-    assert_close_at(mlp.linear1.W.grad, g, idx, "MLP dW_linear1")
+    g, idx = numerical_grad(loss, mlp.fc.W.data)
+    assert_close_at(mlp.fc.W.grad, g, idx, "MLP dW_fc")
 
 
 def test_block():
@@ -193,8 +203,8 @@ def test_block():
 
     g, idx = numerical_grad(loss, x)
     assert_close_at(dx, g, idx, "Block dx")
-    g, idx = numerical_grad(loss, block.norm1.gamma.data)
-    assert_close_at(block.norm1.gamma.grad, g, idx, "Block dnorm1.gamma")
+    g, idx = numerical_grad(loss, block.ln1.gamma.data)
+    assert_close_at(block.ln1.gamma.grad, g, idx, "Block dln1.gamma")
 
 
 def test_softmax_cross_entropy():
@@ -232,9 +242,9 @@ def test_full_model_tiny():
     # tied embedding, an interior block's attention + MLP + LayerNorm, final LN.
     checks = [
         (model.wte.weight, "wte.weight (tied emb + lm_head)"),
-        (model.blocks[0].attention.q_linear.W, "blocks[0].attention.q_linear.W"),
-        (model.blocks[0].ff.linear1.W, "blocks[0].ff.linear1.W"),
-        (model.blocks[1].norm1.gamma, "blocks[1].norm1.gamma"),
+        (model.blocks[0].attn.c_attn.W, "blocks[0].attn.c_attn.W"),
+        (model.blocks[0].mlp.fc.W, "blocks[0].mlp.fc.W"),
+        (model.blocks[1].ln1.gamma, "blocks[1].ln1.gamma"),
         (model.ln_f.gamma, "ln_f.gamma"),
         (model.wpe.weight, "wpe.weight"),
     ]

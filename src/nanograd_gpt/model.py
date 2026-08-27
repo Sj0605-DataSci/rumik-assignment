@@ -21,13 +21,12 @@ class GPT(Module):
         self.xp = xp
         dtype = dtype or xp.float32
 
-        # GPT-2-paper init: every residual-stream-writing projection
-        # (attention's out_linear, MLP's linear2) gets its init std scaled
-        # down by 1/sqrt(2*n_layer), so that as depth grows, each block's
+        # GPT-2-paper init: every residual-stream-writing projection (attn's
+        # c_proj, MLP's final proj) gets its init std scaled down by
+        # 1/sqrt(2*n_layer), so that as depth grows, each block's
         # contribution to the residual stream's variance doesn't grow
-        # unboundedly with it. Only those two get this; q/k/v_linear and
-        # linear1 (which don't write directly into the residual stream)
-        # keep the plain std.
+        # unboundedly with it. Only c_proj/proj get this; c_attn/fc (which
+        # don't write directly into the residual stream) keep the plain std.
         proj_std = std / math.sqrt(2 * config.n_layer)
 
         self.wte = self.add_module(Embedding(config.vocab_size, config.n_embd, xp, std=std, dtype=dtype))
@@ -37,7 +36,7 @@ class GPT(Module):
             self.add_module(
                 Block(
                     config.n_embd, config.n_head, config.block_size, xp,
-                    std=std, proj_std=proj_std, dropout_p=config.dropout, dtype=dtype,
+                    std=std, proj_std=proj_std, dropout=config.dropout, dtype=dtype,
                 )
             )
             for _ in range(config.n_layer)

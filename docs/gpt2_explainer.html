@@ -510,8 +510,8 @@
 
       <line class="f" x1="90" y1="140" x2="130" y2="140"/>
       <rect class="b" x="132" y="118" width="110" height="44" rx="6"/>
-      <text class="l" x="187" y="134" text-anchor="middle">q/k/v_linear</text>
-      <text class="l" x="187" y="150" text-anchor="middle" font-size="10">3x Linear(C,C)</text>
+      <text class="l" x="187" y="134" text-anchor="middle">c_attn</text>
+      <text class="l" x="187" y="150" text-anchor="middle" font-size="10">Linear(C,3C)</text>
 
       <line class="f" x1="242" y1="140" x2="280" y2="140"/>
       <text class="s" x="260" y="128" text-anchor="middle">(B,T,3C)</text>
@@ -556,19 +556,15 @@
 
       <line class="f" x1="764" y1="140" x2="800" y2="140"/>
       <rect class="b ba" x="802" y="118" width="100" height="44" rx="6"/>
-      <text class="l" x="852" y="134" text-anchor="middle" font-size="11">out_linear</text>
+      <text class="l" x="852" y="134" text-anchor="middle" font-size="11">c_proj</text>
       <text class="l" x="852" y="150" text-anchor="middle" font-size="10">Linear(C,C)</text>
 
       <line class="f" x1="902" y1="140" x2="930" y2="140"/>
       <text class="s" x="915" y="128" text-anchor="middle" font-size="9.5">→ +res</text>
     </svg>
-    <figcaption>layers/attention.py, <code>CausalSelfAttention.forward</code>. Diagram shows
-    one combined box for q/k/v projection for space; the actual code (adapted from
-    priyammaz/ManualTransformer, see LICENSE-ManualTransformer.txt) uses three separate
-    Linear layers (<code>q_linear</code>, <code>k_linear</code>, <code>v_linear</code>),
-    not one fused matmul split afterward. The mask is an additive (T,T) matrix of
-    <code>−inf</code> strictly above the diagonal, computed once per layer at
-    construction, sliced to the live <code>T</code> each call.</figcaption>
+    <figcaption>layers.py, <code>CausalSelfAttention.forward</code>. The mask is an
+    additive (T,T) matrix of <code>−inf</code> strictly above the diagonal, computed once
+    per layer at construction, sliced to the live <code>T</code> each call.</figcaption>
   </figure>
 </section>
 
@@ -621,13 +617,13 @@
       Each of the 6 blocks runs, in order, on the running <span class="shape hl">(1,7,384)</span> stream:
       <ol style="margin:0.6em 0 0; padding-left:1.3em;">
         <li><code>LayerNorm(x)</code> → <span class="shape">(1,7,384)</span></li>
-        <li><code>q_linear</code>/<code>k_linear</code>/<code>v_linear</code>: 3× Linear(384→384) → q,k,v each <span class="shape">(1,7,384)</span></li>
+        <li><code>c_attn</code>: Linear(384→1152) → <span class="shape">(1,7,1152)</span>, split into q,k,v each <span class="shape">(1,7,384)</span></li>
         <li>split heads → <span class="shape">(1,6,7,64)</span> each</li>
         <li><code>q @ kᵀ / √64</code> → attention scores <span class="shape">(1,6,7,7)</span>, add causal mask, softmax → <span class="shape">(1,6,7,7)</span></li>
         <li><code>p @ v</code> → <span class="shape">(1,6,7,64)</span>, merge heads → <span class="shape">(1,7,384)</span></li>
-        <li><code>out_linear</code>: Linear(384→384) → <span class="shape">(1,7,384)</span>, add to residual</li>
+        <li><code>c_proj</code>: Linear(384→384) → <span class="shape">(1,7,384)</span>, add to residual</li>
         <li><code>LayerNorm(x)</code> → <span class="shape">(1,7,384)</span></li>
-        <li><code>linear1</code>: Linear(384→1536) → GELU → <code>linear2</code>: Linear(1536→384) → <span class="shape">(1,7,384)</span>, add to residual</li>
+        <li><code>fc</code>: Linear(384→1536) → GELU → <code>proj</code>: Linear(1536→384) → <span class="shape">(1,7,384)</span>, add to residual</li>
       </ol>
       <div class="shapes-line">block in/out: <span class="shape hl">(1,7,384)</span> → <span class="shape hl">(1,7,384)</span> — width never changes, only what's written into it does</div>
     </div>

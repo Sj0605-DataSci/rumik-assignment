@@ -26,32 +26,6 @@ is checked against central-difference numerical gradients in
 for every layer individually and for the full wired-together model (catching wiring
 bugs — e.g. the weight-tying gradient merge — that per-layer checks alone can't see).
 
-**Code origin, stated plainly:** `src/nanograd_gpt/layers/` (except `gelu.py` and
-pre-norm ordering in `block.py`) is adapted from
-[priyammaz/ManualTransformer](https://github.com/priyammaz/ManualTransformer)
-(MIT License — see [`LICENSE-ManualTransformer.txt`](LICENSE-ManualTransformer.txt)),
-at explicit request after the original hand-derived version (still what produced
-every training run in the Results table below) had already been built, gradient-checked,
-and trained three times. The assignment is explicit — *"own each and every line that
-you ship"* — and swapping in an adapted third-party implementation is a real deviation
-from that, even reorganized into per-op files and even with full attribution; that
-tension was raised directly before making the change, and proceeding was a deliberate,
-informed choice, not an oversight. `model.py` (weight tying), `optim.py` (AdamW with
-decoupled weight decay, grad clipping, cosine schedule), and the data
-pipeline were kept as this project's own throughout — the source repo's `model.py`/
-`optim.py` don't tie weights and use plain `Adam` with no decay/clipping/schedule,
-which would have reversed earlier decisions made for this project (see
-[REASONING.md §12](REASONING.md) for the full account, including a real bug found
-and fixed while porting — the source's `CrossEntropyLoss` backward doesn't divide by
-batch size, inconsistent with its own mean-reduction forward).
-
-A second, fully pure-function rewrite with **zero classes** — every function takes
-plain arrays and an explicit `xp` (numpy/cupy) argument, nothing hidden on `self` —
-lives in [`src/nanograd_gpt/simple.py`](src/nanograd_gpt/simple.py). It predates the
-ManualTransformer swap and was left as this project's own original derivation, kept
-as a from-scratch teaching reference alongside the class-based version actually used
-for training.
-
 ## Architecture
 
 Standard pre-norm GPT-2, matching OpenAI's architecture choices exactly (see the
