@@ -5,8 +5,9 @@ __pycache__/
 # tokenized dataset shards - regenerate with scripts/prepare_openwebtext.py
 data/*/*.bin
 
-# training checkpoints - large (~120MB each), regenerate by rerunning scripts/train.py
+# training checkpoints - large (~500MB each), regenerate by rerunning scripts/train.py
 out/*.npz
+out/**/*.npz
 
 # small eval/plot artifacts (history.json, loss_curves.png, wikitext2_eval.json,
 # train.log) are intentionally NOT ignored -- they're the eval evidence

@@ -15,10 +15,10 @@ shape trace: [docs/gpt2_explainer.html](docs/gpt2_explainer.html).
 Two ways to satisfy "no autograd" were on the table: (1) hand-derive and hand-code
 the backward pass for every layer, or (2) write a small tensor autograd engine and
 let it compose backward passes automatically. This project takes **route 1**. Every
-layer in [`src/nanograd_gpt/layers.py`](src/nanograd_gpt/layers.py) is a class with
-an explicit `forward()` and a separately hand-derived `backward()` — no computation
-graph, no tape, no generic `Tensor.backward()`. The "graph" is just the fixed Python
-composition order in [`model.py`](src/nanograd_gpt/model.py).
+layer in [`src/nanograd_gpt/layers/`](src/nanograd_gpt/layers/) is its own file with
+a class exposing an explicit `forward()` and a separately hand-derived `backward()` —
+no computation graph, no tape, no generic `Tensor.backward()`. The "graph" is just the
+fixed Python composition order in [`model.py`](src/nanograd_gpt/model.py).
 
 Correctness is verified independently, not just asserted: every hand-derived backward
 is checked against central-difference numerical gradients in
@@ -32,10 +32,23 @@ lives in [`src/nanograd_gpt/simple.py`](src/nanograd_gpt/simple.py), kept purely
 a from-scratch teaching reference alongside the class-based version actually used for
 training.
 
+[priyammaz/ManualTransformer](https://github.com/priyammaz/ManualTransformer) was
+checked as a reference point (inspected, not run, not copied from — "own every line"
+applies). It turns out to take the same route: a `GradTensor`/`Operation` base-class
+pattern nearly identical in spirit to this repo's `Param`/`Module`, hand-derived
+`forward`/`backward` per op, no autograd tape, NumPy/CuPy backend. Its `LayerNorm`
+backward independently arrives at the same two-correction-term formula used here —
+a useful outside cross-check that the derivation is the standard one, not a coincidence
+of one particular way of writing it. It's a single 712-line `nn.py`, not a multi-file
+layout; the per-file split under `layers/` in this repo is this project's own
+organizational choice, not something borrowed from theirs.
+
 ## Architecture
 
 Standard pre-norm GPT-2, matching OpenAI's architecture choices exactly (see the
-[explainer](docs/gpt2_explainer.html) for line-by-line derivations and shape traces):
+[explainer](docs/gpt2_explainer.html) for line-by-line derivations and shape traces).
+Same architecture for every run below — only the size config and training budget
+change, never the design:
 
 - Learned token embeddings (`wte`) + learned absolute position embeddings (`wpe`), summed
 - `n_layer` × pre-norm transformer block: `x + Attn(LN(x))`, then `x + MLP(LN(x))`
@@ -44,33 +57,17 @@ Standard pre-norm GPT-2, matching OpenAI's architecture choices exactly (see the
 - Final LayerNorm, then an output projection **weight-tied** to `wte` (no separate head)
 - Softmax cross-entropy on next-token prediction
 - AdamW optimizer (decoupled weight decay, skipped on 1-D params), cosine LR schedule with warmup
-- Dropout (embedding/attention/residual) and the GPT-2-paper `1/√(2·n_layer)`
-  residual-projection init scaling are implemented and gradient-checked; see
-  **Known limitations** below for what this specific training run does and doesn't
-  benefit from.
-
-### Config trained
-
-| | |
-|---|---|
-| n_layer | 6 |
-| n_head | 6 |
-| n_embd | 384 |
-| block_size | 256 |
-| vocab_size | 50,304 (GPT-2's 50,257, padded for tensor-friendly shapes) |
-| parameters | 30,062,592 |
-
-Scaled down from real GPT-2-small (12/12/768/1024, 124M params) to fit a multi-hour
-training budget on hand-written, non-kernel-fused NumPy/CuPy ops — see
-[REASONING.md §7](REASONING.md) for the throughput measurements behind that choice
-(the 124M config was benchmarked too: ~3,676 tok/s vs. this config's ~17,000 tok/s).
+- Dropout (embedding/attention/residual branches) and the GPT-2-paper `1/√(2·n_layer)`
+  residual-projection init scaling are implemented and gradient-checked
+  (`layers/dropout.py`, `GPT.__init__`'s `proj_std`) — see **Known limitations** for
+  which runs do and don't benefit from each
 
 ## Dataset
 
 [Skylion007/openwebtext](https://huggingface.co/datasets/Skylion007/openwebtext) — 2 of
 its 80 parquet shards (~100K documents each), BPE-tokenized with `tiktoken`'s GPT-2
 encoding. Not the full ~9B-token corpus; a subset sized to what GB10 throughput
-supports in a few hours (see `scripts/prepare_openwebtext.py`).
+supports (see `scripts/prepare_openwebtext.py`).
 
 | | |
 |---|---|
@@ -79,56 +76,91 @@ supports in a few hours (see `scripts/prepare_openwebtext.py`).
 
 ## Results
 
-Training was run on a DGX Spark (GB10) via CuPy and manually stopped at **step
-16,500 / 28,000** (~59% of the planned run, ~423M tokens processed at ~17,000 tok/s
-sustained) to free the GPU for other work — not a full run to convergence.
+Three training runs, same architecture family, same dataset, increasing scale/rigor:
 
-![train/val loss and perplexity curves](out/loss_curves.png)
+| | Run 1: nano | Run 2: GPT-2-small (undertrained) | Run 2b: GPT-2-small (corrected) |
+|---|---|---|---|
+| params | 30,062,592 | 124,475,904 | 124,475,904 |
+| config | 6L / 384d / 6H / 256ctx | 12L / 768d / 12H / 1024ctx | 12L / 768d / 12H / 1024ctx |
+| tokens trained | 135,168,000 | 52,924,416 | **135,168,000** |
+| steps | 16,500 / 28,000 (stopped) | 4,307 / 4,307 (complete) | 11,000 / 11,000 (complete) |
+| val loss (final) | 4.3808 | 4.6174 | **4.0948** |
+| val perplexity (final) | 79.90 | 101.23 | **60.03** |
+| WikiText-2 test perplexity | 271.09 | 313.80 | **150.36** |
+| WikiText-2 cross-entropy | 5.6025 | 5.7488 | **5.0130** |
 
-| metric | value |
-|---|---|
-| train loss (step 16,500) | 4.4629 |
-| val loss (step 16,500) | 4.3808 |
-| val perplexity (step 16,500) | 79.90 |
-| **WikiText-2 (raw, test) perplexity** — checkpoint @ step 16,000 | **271.09** |
-| WikiText-2 cross-entropy | 5.6025 |
-| WikiText-2 tokens evaluated | 283,136 |
+![comparison of val loss and perplexity across all three runs, by tokens processed](out/comparison_curves.png)
 
-The WikiText-2 number is meaningfully higher than the OpenWebText validation
-perplexity, as expected — WikiText-2 (Wikipedia prose) is a genuinely different
-distribution from OpenWebText's broad web text, so this is a real
-out-of-distribution generalization measurement, not a bug.
+Individual loss/perplexity curves per run:
+[Run 1](out/loss_curves.png) ·
+[Run 2](out/run2_gpt2small/loss_curves.png) ·
+[Run 2b](out/run2b_gpt2small_135M/loss_curves.png)
 
-Loss was still decreasing steadily with no sign of overfitting when the run was
-stopped — these numbers reflect an under-trained checkpoint at ~59% of the planned
-token budget, not a converged model.
+**Run 2b is the best model produced** — same real GPT-2-small architecture as run 2,
+same token budget as run 1, and it beats both on every metric. That comparison is the
+point of keeping all three runs in this table rather than only the final one: it's a
+direct within-project demonstration that both model capacity *and* enough data matter,
+and that fixing a token-budget mistake (below) has a large, measurable effect.
+
+## The road here (roadblocks + how they were resolved)
+
+- **Streaming OpenWebText download was flaky.** The `datasets` streaming iterator's
+  background prefetch threads crashed the interpreter's GIL state under
+  unauthenticated-HF-Hub rate limiting, after the data had already been written.
+  Switched to downloading whole parquet shards directly via `huggingface_hub` instead
+  of the streaming API — simpler, resumable, no background threads to race.
+- **`wikitext`/`openwebtext` dataset repo IDs changed on HF Hub** mid-project
+  (`trust_remote_code` deprecated, bare `wikitext`/`openwebtext` repo names rejected).
+  Fixed by pointing at the current canonical mirrors
+  (`Skylion007/openwebtext`, `Salesforce/wikitext`).
+- **Run 2 (first GPT-2-small attempt) was accidentally undertrained.** The instruction
+  was "real GPT-2 architecture, more data, same as nanoGPT" — but the run was launched
+  with a *fixed wall-clock budget* (~4h) carried over from run 1's planning, without
+  re-deriving the token count for the 124M model's much slower (~7x) per-token
+  throughput. Result: run 2 saw *less* data than the smaller run 1 (53M vs. 135M
+  tokens) — backwards from the intent, and directly explains why it underperformed
+  run 1 despite being the larger, more faithful architecture. **Fix**: run 2b was
+  launched targeting the exact same 135,168,000 tokens as run 1 (11,000 steps ×
+  12 × 1024), regardless of wall-clock cost (~35h in practice, run concurrently with
+  another unrelated GPU job). The corrected run is the clear best of the three — the
+  table above is the direct evidence the fix mattered, not just a caveat.
+- **GB10 unified-memory quirks.** `nvidia-smi`'s simple `--query-gpu=memory.*` flags
+  return `N/A` on GB10 (Grace Blackwell's CPU+GPU-unified memory doesn't report through
+  the same fields discrete GPUs do); `nvidia-smi --query-compute-apps=pid,used_memory`
+  and system `free -h` are what actually show per-process and total usage on this box.
+- **GPU clock cap.** Uncapped GB10 clocks under sustained load have crashed the OS on
+  this machine before (per prior experience); `sudo nvidia-smi -lgc 0,1500` before any
+  long run keeps it stable. Doesn't survive a reboot, so it's a per-session step, not a
+  one-time fix.
 
 ## Known limitations
 
-- **Dropout** is implemented and gradient-checked (`Dropout` in `layers.py`, wired
-  into embeddings/attention/residual branches) but this run used the default `p=0.0`
-  — nanoGPT's own pretraining convention, dropout mainly matters for finetuning — so
-  it had no effect on this run's numbers either way.
-- **Residual-projection init scaling** (`1/√(2·n_layer)` on `c_proj`/`mlp.proj`,
-  matching the GPT-2 paper's variance-control trick) is implemented and verified, but
-  landed in the code *after* this run had already started and initialized its weights
-  with the older uniform-std init. It could not be applied retroactively without
-  discarding the run's progress, so this specific checkpoint does not benefit from it
-  — a fresh run would.
-- Run was stopped manually at 59% of its planned step budget by choice, not due to
-  any failure — see the loss curve for the trend it was on.
+- **Dropout** is implemented, wired into embeddings/attention/residual branches, and
+  gradient-checked, but every run above used `p=0.0` — nanoGPT's own pretraining
+  convention (dropout mainly matters for finetuning) — so it had no numerical effect on
+  any of these three runs' results.
+- **Residual-projection init scaling** (`1/√(2·n_layer)` on `c_proj`/`mlp.proj`) is
+  implemented and verified, and *is* active in runs 2 and 2b (both constructed after
+  the fix landed), but run 1 was already in progress when the fix landed and finished
+  on the older uniform-std init — noted for completeness, not corrected retroactively.
+- None of the three runs reached full convergence — run 1 was stopped manually at 59%
+  of its planned budget to free the GPU; runs 2/2b completed their planned token
+  budgets but longer runs would likely still be improving (see the loss curves).
 
 ## Repo layout
 
 ```
-REASONING.md              design rationale, decisions, roadblock log
+REASONING.md              design rationale, decisions
 docs/gpt2_explainer.html  architecture diagrams + real-sentence shape trace
 src/nanograd_gpt/
   backend.py              numpy/cupy switch (get_xp, scatter_add)
   param.py                Param: array + gradient buffer
-  layers.py                Linear, LayerNorm, GELU, Embedding, Dropout,
-                           CausalSelfAttention, MLP, Block -- each hand-coded
-                           forward()/backward()
+  layers/                 one class per file, hand-coded forward()/backward():
+    module.py               Module base class
+    linear.py, layernorm.py, gelu.py, embedding.py, dropout.py
+    softmax.py               softmax, softmax_backward, softmax_cross_entropy
+    attention.py             CausalSelfAttention
+    mlp.py, block.py
   model.py                GPTConfig, GPT (assembly + weight tying)
   optim.py                AdamW, cosine LR schedule
   simple.py                same architecture, zero classes, pure functions
@@ -138,13 +170,17 @@ scripts/
   train.py                training loop (data loading, schedule, checkpointing)
   bench_throughput.py     GB10 tokens/sec measurement
   overfit_one_batch.py    sanity check: tiny model should drive loss to ~0
-  plot_history.py         loss/perplexity plots from out/history.json
+  plot_history.py         loss/perplexity plot for a single run
+  plot_comparison.py      combined comparison plot across all runs
   eval_wikitext2.py       downstream LM benchmark
 out/
-  history.json, loss_curves.png, wikitext2_eval.json, train.log
+  history.json, loss_curves.png, wikitext2_eval.json, train.log   (run 1)
+  run2_gpt2small/          run 2 (undertrained) artifacts
+  run2b_gpt2small_135M/    run 2b (corrected) artifacts
+  comparison_curves.png    all three runs, side by side
 ```
 
-`out/*.npz` (checkpoints) and `data/*/*.bin` (tokenized shards) are gitignored —
+`out/**/*.npz` (checkpoints) and `data/*/*.bin` (tokenized shards) are gitignored —
 regenerate with `scripts/prepare_openwebtext.py` and `scripts/train.py`.
 
 ## Reproducing
@@ -156,9 +192,15 @@ uv pip install cupy-cuda13x   # or the cuda12x build matching your driver, for G
 
 python tests/test_gradients.py                       # verify the hand-derived gradients
 python scripts/prepare_openwebtext.py --num-shards 2
-python scripts/train.py --device cuda --n-layer 6 --n-head 6 --n-embd 384 \
-    --block-size 256 --batch-size 32 --max-steps 28000
-python scripts/plot_history.py
-python scripts/eval_wikitext2.py --ckpt out/ckpt_<N>.npz --device cuda \
-    --n-layer 6 --n-head 6 --n-embd 384 --block-size 256
+
+# real GPT-2-small, matched to run 2b's 135M-token budget
+python scripts/train.py --device cuda --out-dir out/run2b_gpt2small_135M \
+    --n-layer 12 --n-head 12 --n-embd 768 --block-size 1024 \
+    --batch-size 12 --max-steps 11000 --dropout 0.0
+
+python scripts/plot_history.py --history out/run2b_gpt2small_135M/history.json \
+    --out out/run2b_gpt2small_135M/loss_curves.png
+python scripts/plot_comparison.py
+python scripts/eval_wikitext2.py --ckpt out/run2b_gpt2small_135M/ckpt_final.npz \
+    --device cuda --n-layer 12 --n-head 12 --n-embd 768 --block-size 1024
 ```

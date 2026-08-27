@@ -1,0 +1,208 @@
+train tokens: 227,150,260  val tokens: 110,062
+model params: 124,475,904  device=cuda
+step     0 | train_loss 10.9419 | val_loss 10.9405 | val_ppl 56418.35 | lr 6.00e-06 | tok/s 0
+  step     0 | loss 10.9427 | lr 6.00e-06
+  step    25 | loss 8.3668 | lr 1.56e-04
+  step    50 | loss 7.1605 | lr 3.06e-04
+  step    75 | loss 6.8016 | lr 4.56e-04
+  step   100 | loss 6.7583 | lr 6.00e-04
+  step   125 | loss 6.5232 | lr 6.00e-04
+  step   150 | loss 6.6313 | lr 6.00e-04
+  step   175 | loss 6.4869 | lr 6.00e-04
+step   200 | train_loss 6.4613 | val_loss 6.3883 | val_ppl 594.86 | lr 5.99e-04 | tok/s 1470
+  step   200 | loss 6.5882 | lr 5.99e-04
+  step   225 | loss 6.4627 | lr 5.99e-04
+  step   250 | loss 6.1955 | lr 5.98e-04
+  step   275 | loss 6.5232 | lr 5.98e-04
+  step   300 | loss 6.2683 | lr 5.97e-04
+  step   325 | loss 6.1059 | lr 5.96e-04
+  step   350 | loss 6.1574 | lr 5.95e-04
+  step   375 | loss 6.1559 | lr 5.94e-04
+step   400 | train_loss 6.1613 | val_loss 6.1047 | val_ppl 447.97 | lr 5.93e-04 | tok/s 1473
+  step   400 | loss 6.0076 | lr 5.93e-04
+  step   425 | loss 5.9555 | lr 5.92e-04
+  step   450 | loss 6.1799 | lr 5.91e-04
+  step   475 | loss 5.8592 | lr 5.89e-04
+  step   500 | loss 6.0356 | lr 5.88e-04
+checkpoint saved: out/run2_gpt2small/ckpt_500.npz
+  step   525 | loss 6.2046 | lr 5.87e-04
+  step   550 | loss 5.8727 | lr 5.85e-04
+  step   575 | loss 6.0758 | lr 5.83e-04
+step   600 | train_loss 6.0728 | val_loss 6.0031 | val_ppl 404.68 | lr 5.81e-04 | tok/s 1475
+  step   600 | loss 6.1242 | lr 5.81e-04
+  step   625 | loss 5.8457 | lr 5.80e-04
+  step   650 | loss 5.8369 | lr 5.78e-04
+  step   675 | loss 5.8002 | lr 5.75e-04
+  step   700 | loss 5.8126 | lr 5.73e-04
+  step   725 | loss 5.5700 | lr 5.71e-04
+  step   750 | loss 6.1594 | lr 5.69e-04
+  step   775 | loss 6.0164 | lr 5.66e-04
+step   800 | train_loss 5.9106 | val_loss 5.7995 | val_ppl 330.14 | lr 5.64e-04 | tok/s 1471
+  step   800 | loss 5.7283 | lr 5.64e-04
+  step   825 | loss 5.8285 | lr 5.61e-04
+  step   850 | loss 6.1674 | lr 5.59e-04
+  step   875 | loss 5.8821 | lr 5.56e-04
+  step   900 | loss 5.7675 | lr 5.53e-04
+  step   925 | loss 5.6865 | lr 5.50e-04
+  step   950 | loss 5.7914 | lr 5.47e-04
+  step   975 | loss 5.7983 | lr 5.44e-04
+step  1000 | train_loss 5.7282 | val_loss 5.6770 | val_ppl 292.06 | lr 5.41e-04 | tok/s 1473
+  step  1000 | loss 5.8064 | lr 5.41e-04
+checkpoint saved: out/run2_gpt2small/ckpt_1000.npz
+  step  1025 | loss 5.3726 | lr 5.38e-04
+  step  1050 | loss 5.7655 | lr 5.35e-04
+  step  1075 | loss 5.6307 | lr 5.32e-04
+  step  1100 | loss 5.5021 | lr 5.28e-04
+  step  1125 | loss 5.6199 | lr 5.25e-04
+  step  1150 | loss 5.4758 | lr 5.21e-04
+  step  1175 | loss 5.7346 | lr 5.18e-04
+step  1200 | train_loss 5.5595 | val_loss 5.5117 | val_ppl 247.56 | lr 5.14e-04 | tok/s 1472
+  step  1200 | loss 5.8236 | lr 5.14e-04
+  step  1225 | loss 5.3045 | lr 5.10e-04
+  step  1250 | loss 5.2488 | lr 5.06e-04
+  step  1275 | loss 5.6798 | lr 5.03e-04
+  step  1300 | loss 5.5519 | lr 4.99e-04
+  step  1325 | loss 5.3208 | lr 4.95e-04
+  step  1350 | loss 5.4618 | lr 4.91e-04
+  step  1375 | loss 5.5909 | lr 4.87e-04
+step  1400 | train_loss 5.4329 | val_loss 5.3613 | val_ppl 213.01 | lr 4.82e-04 | tok/s 1474
+  step  1400 | loss 5.5856 | lr 4.82e-04
+  step  1425 | loss 5.3887 | lr 4.78e-04
+  step  1450 | loss 5.5708 | lr 4.74e-04
+  step  1475 | loss 5.6474 | lr 4.70e-04
+  step  1500 | loss 5.6121 | lr 4.65e-04
+checkpoint saved: out/run2_gpt2small/ckpt_1500.npz
+  step  1525 | loss 5.3988 | lr 4.61e-04
+  step  1550 | loss 5.6630 | lr 4.57e-04
+  step  1575 | loss 5.2605 | lr 4.52e-04
+step  1600 | train_loss 5.3242 | val_loss 5.2436 | val_ppl 189.35 | lr 4.48e-04 | tok/s 1475
+  step  1600 | loss 5.3558 | lr 4.48e-04
+  step  1625 | loss 5.3968 | lr 4.43e-04
+  step  1650 | loss 5.3888 | lr 4.38e-04
+  step  1675 | loss 5.3837 | lr 4.34e-04
+  step  1700 | loss 5.1113 | lr 4.29e-04
+  step  1725 | loss 5.0979 | lr 4.24e-04
+  step  1750 | loss 5.4075 | lr 4.20e-04
+  step  1775 | loss 5.1621 | lr 4.15e-04
+step  1800 | train_loss 5.3110 | val_loss 5.1638 | val_ppl 174.83 | lr 4.10e-04 | tok/s 1474
+  step  1800 | loss 5.2915 | lr 4.10e-04
+  step  1825 | loss 5.1914 | lr 4.05e-04
+  step  1850 | loss 5.1476 | lr 4.00e-04
+  step  1875 | loss 5.0691 | lr 3.96e-04
+  step  1900 | loss 5.4402 | lr 3.91e-04
+  step  1925 | loss 5.1496 | lr 3.86e-04
+  step  1950 | loss 5.1426 | lr 3.81e-04
+  step  1975 | loss 5.3994 | lr 3.76e-04
+step  2000 | train_loss 5.2100 | val_loss 5.0843 | val_ppl 161.47 | lr 3.71e-04 | tok/s 1477
+  step  2000 | loss 5.2179 | lr 3.71e-04
+checkpoint saved: out/run2_gpt2small/ckpt_2000.npz
+  step  2025 | loss 5.0417 | lr 3.66e-04
+  step  2050 | loss 5.2496 | lr 3.61e-04
+  step  2075 | loss 4.8570 | lr 3.56e-04
+  step  2100 | loss 5.0900 | lr 3.51e-04
+  step  2125 | loss 5.1713 | lr 3.46e-04
+  step  2150 | loss 5.0340 | lr 3.41e-04
+  step  2175 | loss 5.1009 | lr 3.36e-04
+step  2200 | train_loss 5.0844 | val_loss 5.0443 | val_ppl 155.13 | lr 3.31e-04 | tok/s 1471
+  step  2200 | loss 5.0239 | lr 3.31e-04
+  step  2225 | loss 5.3006 | lr 3.26e-04
+  step  2250 | loss 5.0384 | lr 3.21e-04
+  step  2275 | loss 5.1424 | lr 3.16e-04
+  step  2300 | loss 5.1952 | lr 3.11e-04
+  step  2325 | loss 4.9916 | lr 3.06e-04
+  step  2350 | loss 4.9018 | lr 3.01e-04
+  step  2375 | loss 5.2116 | lr 2.96e-04
+step  2400 | train_loss 4.9877 | val_loss 4.9741 | val_ppl 144.62 | lr 2.91e-04 | tok/s 1475
+  step  2400 | loss 5.0074 | lr 2.91e-04
+  step  2425 | loss 5.1058 | lr 2.86e-04
+  step  2450 | loss 5.0583 | lr 2.81e-04
+  step  2475 | loss 5.0730 | lr 2.76e-04
+  step  2500 | loss 5.1266 | lr 2.71e-04
+checkpoint saved: out/run2_gpt2small/ckpt_2500.npz
+  step  2525 | loss 4.9944 | lr 2.66e-04
+  step  2550 | loss 4.8822 | lr 2.61e-04
+  step  2575 | loss 4.8528 | lr 2.56e-04
+step  2600 | train_loss 4.9887 | val_loss 4.9734 | val_ppl 144.51 | lr 2.51e-04 | tok/s 1473
+  step  2600 | loss 4.8458 | lr 2.51e-04
+  step  2625 | loss 4.8414 | lr 2.46e-04
+  step  2650 | loss 4.9236 | lr 2.42e-04
+  step  2675 | loss 5.0442 | lr 2.37e-04
+  step  2700 | loss 5.0093 | lr 2.32e-04
+  step  2725 | loss 4.9713 | lr 2.27e-04
+  step  2750 | loss 4.8538 | lr 2.23e-04
+  step  2775 | loss 4.8378 | lr 2.18e-04
+step  2800 | train_loss 4.9507 | val_loss 4.9121 | val_ppl 135.93 | lr 2.14e-04 | tok/s 1475
+  step  2800 | loss 4.9745 | lr 2.14e-04
+  step  2825 | loss 4.8737 | lr 2.09e-04
+  step  2850 | loss 4.7465 | lr 2.05e-04
+  step  2875 | loss 4.8225 | lr 2.00e-04
+  step  2900 | loss 4.7416 | lr 1.96e-04
+  step  2925 | loss 4.8225 | lr 1.91e-04
+  step  2950 | loss 4.8367 | lr 1.87e-04
+  step  2975 | loss 4.7899 | lr 1.83e-04
+step  3000 | train_loss 4.8696 | val_loss 4.7636 | val_ppl 117.17 | lr 1.79e-04 | tok/s 1477
+  step  3000 | loss 4.8577 | lr 1.79e-04
+checkpoint saved: out/run2_gpt2small/ckpt_3000.npz
+  step  3025 | loss 4.8527 | lr 1.75e-04
+  step  3050 | loss 4.9136 | lr 1.70e-04
+  step  3075 | loss 4.7464 | lr 1.66e-04
+  step  3100 | loss 4.7376 | lr 1.62e-04
+  step  3125 | loss 4.9152 | lr 1.59e-04
+  step  3150 | loss 4.9149 | lr 1.55e-04
+  step  3175 | loss 4.7612 | lr 1.51e-04
+step  3200 | train_loss 4.8508 | val_loss 4.7472 | val_ppl 115.26 | lr 1.47e-04 | tok/s 1472
+  step  3200 | loss 4.9499 | lr 1.47e-04
+  step  3225 | loss 4.9679 | lr 1.43e-04
+  step  3250 | loss 4.8481 | lr 1.40e-04
+  step  3275 | loss 4.8331 | lr 1.36e-04
+  step  3300 | loss 4.6037 | lr 1.33e-04
+  step  3325 | loss 4.5095 | lr 1.29e-04
+  step  3350 | loss 4.7516 | lr 1.26e-04
+  step  3375 | loss 4.8503 | lr 1.23e-04
+step  3400 | train_loss 4.8041 | val_loss 4.7097 | val_ppl 111.01 | lr 1.20e-04 | tok/s 1475
+  step  3400 | loss 4.6688 | lr 1.20e-04
+  step  3425 | loss 4.9060 | lr 1.16e-04
+  step  3450 | loss 4.6521 | lr 1.13e-04
+  step  3475 | loss 4.9096 | lr 1.10e-04
+  step  3500 | loss 4.7229 | lr 1.08e-04
+checkpoint saved: out/run2_gpt2small/ckpt_3500.npz
+  step  3525 | loss 4.9727 | lr 1.05e-04
+  step  3550 | loss 4.6963 | lr 1.02e-04
+  step  3575 | loss 4.6388 | lr 9.93e-05
+step  3600 | train_loss 4.7232 | val_loss 4.6683 | val_ppl 106.52 | lr 9.68e-05 | tok/s 1473
+  step  3600 | loss 4.5705 | lr 9.68e-05
+  step  3625 | loss 4.6769 | lr 9.43e-05
+  step  3650 | loss 4.8087 | lr 9.18e-05
+  step  3675 | loss 4.7609 | lr 8.95e-05
+  step  3700 | loss 4.5655 | lr 8.73e-05
+  step  3725 | loss 4.8254 | lr 8.51e-05
+  step  3750 | loss 4.7957 | lr 8.30e-05
+  step  3775 | loss 4.6881 | lr 8.10e-05
+step  3800 | train_loss 4.7426 | val_loss 4.7045 | val_ppl 110.44 | lr 7.91e-05 | tok/s 1475
+  step  3800 | loss 4.7670 | lr 7.91e-05
+  step  3825 | loss 4.6698 | lr 7.73e-05
+  step  3850 | loss 4.7710 | lr 7.56e-05
+  step  3875 | loss 4.7059 | lr 7.39e-05
+  step  3900 | loss 4.7339 | lr 7.24e-05
+  step  3925 | loss 4.8740 | lr 7.09e-05
+  step  3950 | loss 4.7880 | lr 6.95e-05
+  step  3975 | loss 4.9380 | lr 6.83e-05
+step  4000 | train_loss 4.7059 | val_loss 4.6386 | val_ppl 103.40 | lr 6.71e-05 | tok/s 1477
+  step  4000 | loss 5.0520 | lr 6.71e-05
+checkpoint saved: out/run2_gpt2small/ckpt_4000.npz
+  step  4025 | loss 4.6926 | lr 6.60e-05
+  step  4050 | loss 4.6903 | lr 6.50e-05
+  step  4075 | loss 4.7684 | lr 6.40e-05
+  step  4100 | loss 4.6239 | lr 6.32e-05
+  step  4125 | loss 4.6640 | lr 6.25e-05
+  step  4150 | loss 4.6665 | lr 6.19e-05
+  step  4175 | loss 4.7691 | lr 6.13e-05
+step  4200 | train_loss 4.7109 | val_loss 4.6283 | val_ppl 102.34 | lr 6.09e-05 | tok/s 1472
+  step  4200 | loss 4.5697 | lr 6.09e-05
+  step  4225 | loss 4.6198 | lr 6.05e-05
+  step  4250 | loss 4.7942 | lr 6.02e-05
+  step  4275 | loss 4.7374 | lr 6.01e-05
+  step  4300 | loss 4.7097 | lr 6.00e-05
+step  4307 | train_loss 4.6440 | val_loss 4.6174 | val_ppl 101.23 | lr 6.00e-05 | tok/s 2018
+checkpoint saved: out/run2_gpt2small/ckpt_final.npz
+training complete
